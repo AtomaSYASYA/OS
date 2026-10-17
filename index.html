@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SYS // ATOM</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Retro Pixel Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #000000;
+      --fg: #ffffff;
+    }
+
+    body.inverted {
+      --bg: #ffffff;
+      --fg: #000000;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-font-smoothing: none;
+      -moz-osx-font-smoothing: grayscale;
+      image-rendering: pixelated;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      color: var(--fg);
+      font-family: 'VT323', monospace;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .font-pixel {
+      font-family: 'Silkscreen', 'Press Start 2P', monospace;
+    }
+
+    /* 1-Bit Dithered Desktop Background (Strictly 2 colors: --bg and --fg) */
+    .dither-bg {
+      background-color: var(--bg);
+      background-image: radial-gradient(var(--fg) 1px, transparent 0);
+      background-size: 16px 16px;
+    }
+
+    /* Classic 1-Bit Checkerboard Dither for Window Title Bars */
+    .dither-bar {
+      background-image:
+        linear-gradient(45deg, var(--fg) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--fg) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, var(--fg) 75%),
+        linear-gradient(-45deg, transparent 75%, var(--fg) 75%);
+      background-size: 4px 4px;
+      background-position: 0 0, 0 2px, 2px -2px, -2px 0;
+    }
+
+    /* Retro OS Window Frame with Double Border & Hard Offset Shadow */
+    .os-window {
+      background-color: var(--bg);
+      border: 2px solid var(--fg);
+      box-shadow: 4px 4px 0px var(--fg);
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .os-window.active-win {
+      box-shadow: 6px 6px 0px var(--fg);
+    }
+
+    .os-window-inner {
+      border: 1px solid var(--fg);
+      margin: 2px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .os-titlebar {
+      background-color: var(--bg);
+      border-bottom: 2px solid var(--fg);
+      padding: 4px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: move;
+      height: 28px;
+    }
+
+    .os-title-label {
+      background-color: var(--bg);
+      padding: 0 6px;
+      font-family: 'Silkscreen', monospace;
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* 1-Bit Interactive Button */
+    .os-btn {
+      background-color: var(--bg);
+      color: var(--fg);
+      border: 2px solid var(--fg);
+      font-family: 'Silkscreen', monospace;
+      font-size: 11px;
+      padding: 6px 10px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .os-btn:hover,
+    .os-btn:focus-visible,
+    .os-btn.active-state {
+      background-color: var(--fg);
+      color: var(--bg);
+      outline: none;
+    }
+
+    .os-btn:active {
+      transform: translate(2px, 2px);
+    }
+
+    .os-close-btn {
+      background-color: var(--bg);
+      color: var(--fg);
+      border: 1px solid var(--fg);
+      font-family: 'Silkscreen', monospace;
+      font-size: 10px;
+      width: 20px;
+      height: 20px;
+      line-height: 18px;
+      text-align: center;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .os-close-btn:hover {
+      background-color: var(--fg);
+      color: var(--bg);
+    }
+
+    /* Desktop Icon Styling */
+    .desktop-icon {
+      width: 84px;
+      padding: 6px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      background-color: var(--bg);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .desktop-icon:hover {
+      border: 1px dashed var(--fg);
+    }
+
+    .desktop-icon:active,
+    .desktop-icon.selected {
+      background-color: var(--fg);
+      color: var(--bg);
+    }
+
+    /* Subtle CRT scanline overlay (pure 1-bit opacity lines) */
+    .scanlines {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9990;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 2px,
+        rgba(128, 128, 128, 0.08) 3px
+      );
+    }
+
+    /* Screen Glitch Effect */
+    @keyframes glitch-anim {
+      0% { transform: translate(0, 0); filter: invert(0); }
+      20% { transform: translate(-6px, 2px); filter: invert(1); }
+      40% { transform: translate(6px, -2px); }
+      60% { transform: translate(-4px, -2px); filter: invert(1); }
+      80% { transform: translate(4px, 2px); filter: invert(0); }
+      100% { transform: translate(0, 0); }
+    }
+
+    body.glitching {
+      animation: glitch-anim 0.28s steps(2, end) infinite;
+    }
+
+    /* Blinking terminal cursor */
+    .cursor-blink {
+      display: inline-block;
+      width: 8px;
+      height: 14px;
+      background-color: var(--fg);
+      vertical-align: middle;
+      animation: blink 1s steps(2, start) infinite;
+    }
+
+    @keyframes blink {
+      to { visibility: hidden; }
+    }
+
+    /* Custom Scrollbar for Console/Logs */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+      border-left: 1px solid var(--fg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--fg);
+    }
+
+    /* Allow selection inside terminal output */
+    #term-output, #term-output * {
+      user-select: text;
+    }
+
+    /* Mobile & Tablet Responsive Layout (<=768px) */
+    @media (max-width: 768px) {
+      body {
+        overflow-y: auto;
+        overflow-x: hidden;
+        height: auto;
+        min-height: 100vh;
+      }
+      #desktop-area {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 10px;
+        padding-bottom: 60px;
+        height: auto !important;
+        overflow: visible !important;
+      }
+      .os-window {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-shadow: 3px 3px 0px var(--fg);
+      }
+      .os-titlebar {
+        cursor: default;
+        height: 32px;
+      }
+      #desktop-icons {
+        display: grid !important;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 6px;
+        width: 100% !important;
+        position: relative !important;
+      }
+      .desktop-icon {
+        width: 100% !important;
+        padding: 6px 2px;
+        border: 1px solid var(--fg);
+      }
+      /* Prevent iOS Safari zoom on input focus */
+      #term-input {
+        font-size: 16px !important;
+      }
+    }
+  </style>
+</head>
+<body class="dither-bg">
+
+  <!-- Scanline Overlay -->
+  <div id="crt-overlay" class="scanlines"></div>
+
+  <!-- Reboot Overlay Screen -->
+  <div id="reboot-overlay" class="fixed inset-0 bg-[var(--bg)] text-[var(--fg)] z-[9999] hidden flex-col justify-center items-start p-6 font-mono text-lg">
+    <div id="reboot-log" class="space-y-1"></div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- REAL HTML5 AUDIO ELEMENT (AUTOPLAY + LOOP, SUPPORTS MP3 & M4A)        -->
+  <!-- Place "bgm.mp3" (or "bgm.m4a") in the same repository folder          -->
+  <!-- ===================================================================== -->
+  <audio id="bgm-audio" autoplay loop preload="auto">
+    <source src="bgm.mp3" type="audio/mpeg" />
+    <source src="bgm.m4a" type="audio/mp4" />
+  </audio>
+
+  <!-- Top System Status Bar -->
+  <header class="w-full h-9 border-b-2 border-[var(--fg)] bg-[var(--bg)] px-3 flex items-center justify-between z-50 sticky top-0">
+    <div class="flex items-center gap-3">
+      <span class="font-pixel text-xs tracking-wider">[SYS://ATOM_OS]</span>
+      <span class="text-sm hidden sm:inline">MEM: 64KB OK</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="invert-btn" class="os-btn !py-0.5 !px-2 !text-[10px]" title="Invert 1-Bit Polarity">
+        [INVERT]
+      </button>
+      <span id="sys-clock" class="font-pixel text-xs">00:00:00</span>
+    </div>
+  </header>
+
+  <!-- Main Desktop Workspace -->
+  <main id="desktop-area" class="relative w-full h-[calc(100vh-72px)] overflow-hidden p-4">
+
+    <!-- Desktop Shortcut Icons -->
+    <nav id="desktop-icons" class="flex flex-col gap-3 z-10 w-24">
+      <div class="desktop-icon" onclick="openWindow('win-profile')">
+        <svg class="w-7 h-7" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M2 1h12v14H2V1zm2 2v10h8V3H4zm2 2h4v3H6V5zm-1 5h6v2H5v-2z"/>
+        </svg>
+        <span class="font-pixel text-[9px] sm:text-[10px] text-center leading-tight">USER.SYS</span>
+      </div>
+
+      <div class="desktop-icon" onclick="openWindow('win-links')">
+        <svg class="w-7 h-7" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M9 2h5v5h-2V5h-2v2H8V5h2V4H9V2zM6 6h4v4H6V6zm-4 3h2v2h2v2H2V9zm5 2h2v3H4v-2h3v-1z"/>
+        </svg>
+        <span class="font-pixel text-[9px] sm:text-[10px] text-center leading-tight">LINKS.EXE</span>
+      </div>
+
+      <div class="desktop-icon" onclick="openWindow('win-bgm')">
+        <svg class="w-7 h-7" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M6 2h8v9h-4v-3h2V4H8v9H4v-3h2V2z"/>
+        </svg>
+        <span class="font-pixel text-[9px] sm:text-[10px] text-center leading-tight">BGM.MP3</span>
+      </div>
+
+      <div class="desktop-icon" onclick="openWindow('win-term')">
+        <svg class="w-7 h-7" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M1 2h14v12H1V2zm2 2v8h10V4H3zm1 1h2v1H4V5zm2 1h2v1H6V6zM4 7h2v1H4V7zm3 2h4v1H7V9z"/>
+        </svg>
+        <span class="font-pixel text-[9px] sm:text-[10px] text-center leading-tight">TERM.SH</span>
+      </div>
+
+      <div class="desktop-icon" onclick="openWindow('win-extras')">
+        <svg class="w-7 h-7" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M1 2h6l2 2h6v10H1V2zm2 2v8h10V6H8L6 4H3z"/>
+        </svg>
+        <span class="font-pixel text-[9px] sm:text-[10px] text-center leading-tight">EXTRAS.DIR</span>
+      </div>
+    </nav>
+
+    <!-- =================================================================== -->
+    <!-- WINDOW 1: USER.SYS (LOGO + MINIMAL INFO)                            -->
+    <!-- =================================================================== -->
+    <section id="win-profile" class="os-window w-[290px]" style="top: 20px; left: 118px; z-index: 20;">
+      <div class="os-window-inner">
+        <div class="os-titlebar dither-bar" data-drag="win-profile">
+          <span class="os-title-label">USER.SYS</span>
+          <button class="os-close-btn" onclick="closeWindow('win-profile')">X</button>
+        </div>
+
+        <div class="p-4 flex flex-col items-center gap-3">
+          <!-- Attached Pixel Cat Logo (Supports external logo.png OR exact pixel-perfect SVG) -->
+          <div class="w-28 h-28 border-2 border-[var(--fg)] bg-black flex items-center justify-center p-1 relative">
+            <img
+              id="custom-logo-img"
+              src="logo.png"
+              alt="LOGO"
+              class="w-full h-full object-contain hidden"
+              onload="this.classList.remove('hidden'); document.getElementById('pixel-cat-svg').classList.add('hidden');"
+              onerror="this.classList.add('hidden');"
+            />
+            <!-- Exact 32x32 1-Bit Pixel Reconstruction of the Attached Cat Logo -->
+            <svg id="pixel-cat-svg" viewBox="0 0 32 32" class="w-full h-full" shape-rendering="crispEdges">
+              <rect width="32" height="32" fill="#000000"/>
+              <g fill="#ffffff">
+                <!-- Left Ear -->
+                <rect x="7" y="4" width="2" height="1"/>
+                <rect x="6" y="5" width="3" height="2"/>
+                <rect x="5" y="7" width="5" height="2"/>
+                <!-- Right Ear -->
+                <rect x="23" y="4" width="2" height="1"/>
+                <rect x="23" y="5" width="3" height="2"/>
+                <rect x="22" y="7" width="5" height="2"/>
+                <!-- Headband / Visor Bar -->
+                <rect x="6" y="11" width="20" height="1"/>
+                <rect x="5" y="12" width="22" height="1"/>
+                <!-- Eyes -->
+                <rect x="10" y="14" width="3" height="6"/>
+                <rect x="19" y="14" width="3" height="6"/>
+                <!-- Left Whiskers -->
+                <rect x="3" y="19" width="4" height="1"/>
+                <rect x="5" y="21" width="2" height="1"/>
+                <!-- Right Whiskers -->
+                <rect x="25" y="19" width="4" height="1"/>
+                <rect x="25" y="21" width="2" height="1"/>
+                <!-- Nose -->
+                <rect x="15" y="21" width="2" height="1"/>
+                <!-- Mouth / Fangs -->
+                <rect x="13" y="23" width="1" height="1"/>
+                <rect x="15" y="23" width="2" height="1"/>
+                <rect x="18" y="23" width="1" height="1"/>
+                <rect x="14" y="24" width="1" height="1"/>
+                <rect x="17" y="24" width="1" height="1"/>
+              </g>
+            </svg>
+          </div>
+
+          <!-- Minimal User Readout -->
+          <div class="w-full border-t-2 border-[var(--fg)] pt-2 text-lg leading-tight space-y-1">
+            <div class="font-pixel text-[11px] text-center py-0.5 border border-[var(--fg)]">
+              ID: <span id="info-id">ATOM</span> // STATUS: <span id="info-status">ONLINE</span>
+            </div>
+            <div class="flex justify-between pt-1">
+              <span>ROLE:</span>
+              <span id="info-role"></span>
+            </div>
+            <div class="border-t border-dashed border-[var(--fg)] pt-1.5 mt-1 text-base text-center" id="info-bio"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- WINDOW 2: LINKS.EXE (STRICTLY DISCORD, TELEGRAM, SOUNDCLOUD)        -->
+    <!-- =================================================================== -->
+    <section id="win-links" class="os-window w-[300px]" style="top: 20px; left: 428px; z-index: 21;">
+      <div class="os-window-inner">
+        <div class="os-titlebar dither-bar" data-drag="win-links">
+          <span class="os-title-label">LINKS.EXE</span>
+          <button class="os-close-btn" onclick="closeWindow('win-links')">X</button>
+        </div>
+
+        <div class="p-4 flex flex-col gap-2.5">
+          <!-- Discord -->
+          <a id="link-discord" href="#" target="_blank" rel="noopener noreferrer" class="os-btn w-full !justify-between !py-3 !px-3">
+            <span class="flex items-center gap-2.5">
+              <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M3 3h10v9l-2 2-1-2H6l-1 2-2-2V3zm3 3v2h2V6H6zm4 0v2h2V6h-2z"/>
+              </svg>
+              <span>DISCORD</span>
+            </span>
+            <span>[-&gt;]</span>
+          </a>
+
+          <!-- Telegram -->
+          <a id="link-telegram" href="#" target="_blank" rel="noopener noreferrer" class="os-btn w-full !justify-between !py-3 !px-3">
+            <span class="flex items-center gap-2.5">
+              <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M14 2L2 7l4 2 2 5 2-3 3 2 1-11zM7 8l5-4-4 5v3L7 8z"/>
+              </svg>
+              <span>TELEGRAM</span>
+            </span>
+            <span>[-&gt;]</span>
+          </a>
+
+          <!-- SoundCloud -->
+          <a id="link-soundcloud" href="#" target="_blank" rel="noopener noreferrer" class="os-btn w-full !justify-between !py-3 !px-3">
+            <span class="flex items-center gap-2.5">
+              <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M2 8h1v4H2V8zm2-2h1v6H4V6zm2-2h2v8H6V4zm3 1h4v2h2v5H9V5z"/>
+              </svg>
+              <span>SOUNDCLOUD</span>
+            </span>
+            <span>[-&gt;]</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- WINDOW 3: BGM.MP3 (ONLY BIG ON / OFF BUTTON + AUTOPLAY)             -->
+    <!-- =================================================================== -->
+    <section id="win-bgm" class="os-window w-[300px]" style="top: 235px; left: 428px; z-index: 22;">
+      <div class="os-window-inner">
+        <div class="os-titlebar dither-bar" data-drag="win-bgm">
+          <span class="os-title-label">BGM.MP3</span>
+          <button class="os-close-btn" onclick="closeWindow('win-bgm')">X</button>
+        </div>
+
+        <div class="p-4 flex flex-col gap-3 items-center justify-center">
+          <!-- Big Chunky ON / OFF Toggle Button -->
+          <button
+            id="bgm-toggle-btn"
+            onclick="toggleBgm()"
+            class="os-btn w-full !py-5 !text-sm sm:!text-base tracking-wider border-2 border-[var(--fg)]"
+          >
+            [ SOUND: ON ]
+          </button>
+
+          <!-- Minimal 1-Bit Status Line -->
+          <div class="w-full flex items-center justify-between text-sm border-t border-dashed border-[var(--fg)] pt-2 px-1">
+            <span>CHANNEL: BGM_LOOP</span>
+            <span id="bgm-state-label" class="font-pixel text-[10px]">ACTIVE</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- WINDOW 4: EXTRAS.DIR (MODULAR SYSTEM FOR FUTURE STUFF / TOYS)       -->
+    <!-- =================================================================== -->
+    <section id="win-extras" class="os-window w-[290px]" style="top: 300px; left: 118px; z-index: 23;">
+      <div class="os-window-inner">
+        <div class="os-titlebar dither-bar" data-drag="win-extras">
+          <span class="os-title-label">EXTRAS.DIR</span>
+          <button class="os-close-btn" onclick="closeWindow('win-extras')">X</button>
+        </div>
+
+        <div class="p-3 flex flex-col gap-2">
+          <!-- Module Selector Tabs rendered from CONFIG.extras -->
+          <div id="extras-list" class="grid grid-cols-2 gap-1.5"></div>
+
+          <!-- Active Module Viewport -->
+          <div id="extra-viewport" class="border border-[var(--fg)] p-2.5 min-h-[112px] text-base flex flex-col justify-between"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- WINDOW 5: TERM.SH (EXPANDED INTERACTIVE CONSOLE)                    -->
+    <!-- =================================================================== -->
+    <section id="win-term" class="os-window w-[360px]" style="top: 20px; left: 748px; z-index: 24;">
+      <div class="os-window-inner">
+        <div class="os-titlebar dither-bar" data-drag="win-term">
+          <span class="os-title-label">TERM.SH</span>
+          <button class="os-close-btn" onclick="closeWindow('win-term')">X</button>
+        </div>
+
+        <div class="p-3 flex flex-col gap-2 h-[290px] sm:h-[320px]">
+          <div id="term-output" class="flex-1 overflow-y-auto text-base leading-tight space-y-1 pr-1 font-mono">
+            <div>ATOM_OS KERNEL V1.04 READY.</div>
+            <div>TYPE <span class="underline cursor-pointer" onclick="runCmd('help')">HELP</span> FOR COMMANDS.</div>
+          </div>
+
+          <!-- Quick tap chips for mobile convenience -->
+          <div class="flex flex-wrap gap-1 pt-1 border-t border-dashed border-[var(--fg)]">
+            <button type="button" class="os-btn !py-0.5 !px-1.5 !text-[9px]" onclick="runCmd('help')">HELP</button>
+            <button type="button" class="os-btn !py-0.5 !px-1.5 !text-[9px]" onclick="runCmd('sys')">SYS</button>
+            <button type="button" class="os-btn !py-0.5 !px-1.5 !text-[9px]" onclick="runCmd('ls')">LS</button>
+            <button type="button" class="os-btn !py-0.5 !px-1.5 !text-[9px]" onclick="runCmd('pet')">PET</button>
+            <button type="button" class="os-btn !py-0.5 !px-1.5 !text-[9px]" onclick="runCmd('glitch')">GLITCH</button>
+            <button type="button" class="os-btn !py-0.5 !px-1.5 !text-[9px]" onclick="runCmd('clear')">CLR</button>
+          </div>
+
+          <form id="term-form" class="flex items-center border-t-2 border-[var(--fg)] pt-2 gap-1.5">
+            <span class="font-pixel text-xs">&gt;</span>
+            <input
+              id="term-input"
+              type="text"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              placeholder="TYPE COMMAND..."
+              class="bg-transparent text-[var(--fg)] focus:outline-none w-full text-base font-mono"
+            />
+            <button type="submit" class="os-btn !py-1 !px-2 !text-[10px]">RUN</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Taskbar -->
+  <footer class="w-full h-9 border-t-2 border-[var(--fg)] bg-[var(--bg)] px-2 sm:px-3 flex items-center justify-between z-50 fixed bottom-0 left-0">
+    <div class="flex items-center gap-1 overflow-x-auto py-1">
+      <button class="os-btn !py-0.5 !px-2 !text-[10px]" onclick="openWindow('win-profile')">USER</button>
+      <button class="os-btn !py-0.5 !px-2 !text-[10px]" onclick="openWindow('win-links')">LINKS</button>
+      <button class="os-btn !py-0.5 !px-2 !text-[10px]" onclick="openWindow('win-bgm')">BGM</button>
+      <button class="os-btn !py-0.5 !px-2 !text-[10px]" onclick="openWindow('win-term')">TERM</button>
+      <button class="os-btn !py-0.5 !px-2 !text-[10px]" onclick="openWindow('win-extras')">EXTRAS</button>
+    </div>
+    <div class="text-sm hidden sm:flex items-center gap-2">
+      <span id="bgm-status-dot" class="font-pixel text-[10px]">SOUND: ON</span>
+      <span class="cursor-blink"></span>
+    </div>
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- SYSTEM CONFIGURATION & SCRIPTS                                        -->
+  <!-- ===================================================================== -->
+  <script>
+    /**
+     * =========================================================================
+     * 1. EASY CONFIGURATION — EDIT YOUR INFO, LINKS, MP3 & VIRTUAL FILES HERE
+     * =========================================================================
+     */
+    const CONFIG = {
+      // Info shown in USER.SYS
+      profile: {
+        id: "ATOM",
+        role: "CREATOR / NETRUNNER",
+        status: "ONLINE",
+        bio: "WELCOME TO MY NODE."
+      },
+
+      // Strictly 3 links: Discord, Telegram, SoundCloud
+      links: {
+        discord: "https://discord.com/users/YOUR_ID",
+        telegram: "https://t.me/YOUR_USERNAME",
+        soundcloud: "https://soundcloud.com/YOUR_USERNAME"
+      },
+
+      // Background music file name in your GitHub repository
+      bgmFile: "bgm.mp3",
+
+      // Virtual files readable via 'ls' and 'cat <filename>' in TERM.SH
+      files: {
+        "readme.txt": [
+          "=== README.TXT ===",
+          "NODE: ATOM PERSONAL HUB",
+          "ARCH: 1-BIT MONOCHROME OS",
+          "USE LINKS.EXE TO CONNECT."
+        ],
+        "links.dat": [
+          "=== LINKS.DAT ===",
+          "1. DISCORD    -> [OPEN DISCORD]",
+          "2. TELEGRAM   -> [OPEN TG]",
+          "3. SOUNDCLOUD -> [OPEN SC]"
+        ],
+        "secret.txt": [
+          "=== SECRET.TXT ===",
+          "[LIGHTBULB_PROTOCOL: INTACT]",
+          "THE ENTITY IS WATCHING.",
+          "=^..^=  STAY DETERMINED."
+        ]
+      },
+
+      // Modular items in EXTRAS.DIR — easily add new widgets here in the future!
+      extras: [
+        { id: "PAD.EXE", type: "pixelpad" },
+        { id: "CLICKER.BIN", type: "counter", label: "PULSES" },
+        { id: "GLITCH.EXE", type: "action", label: "TRIGGER GLITCH", cmd: "glitch" },
+        {
+          id: "NOTES.TXT",
+          type: "text",
+          lines: [
+            "[01] 1-BIT CORE ONLINE.",
+            "[02] BGM LOOP ARMED.",
+            "[03] MORE TOYS SOON."
+          ]
+        }
+      ]
+    };
+
+    const bootTimestamp = Date.now();
+
+    /**
+     * =========================================================================
+     * 2. INITIALIZE PROFILE & LINKS
+     * =========================================================================
+     */
+    function initContent() {
+      document.getElementById("info-id").textContent = CONFIG.profile.id;
+      document.getElementById("info-role").textContent = CONFIG.profile.role;
+      document.getElementById("info-status").textContent = CONFIG.profile.status;
+      document.getElementById("info-bio").textContent = CONFIG.profile.bio;
+
+      document.getElementById("link-discord").href = CONFIG.links.discord;
+      document.getElementById("link-telegram").href = CONFIG.links.telegram;
+      document.getElementById("link-soundcloud").href = CONFIG.links.soundcloud;
+    }
+
+    /**
+     * =========================================================================
+     * 3. BGM.MP3 — BIG ON/OFF BUTTON + IMMEDIATE AUTOPLAY ON ENTRY
+     * =========================================================================
+     */
+    const audio = document.getElementById("bgm-audio");
+    const toggleBtn = document.getElementById("bgm-toggle-btn");
+    const stateLabel = document.getElementById("bgm-state-label");
+    const statusDot = document.getElementById("bgm-status-dot");
+
+    audio.volume = 0.65;
+    let userMuted = false; // Tracks if the user explicitly turned sound OFF
+
+    function updateBgmUI(isPlaying) {
+      if (isPlaying) {
+        toggleBtn.textContent = "[ SOUND: ON ]";
+        toggleBtn.classList.add("active-state");
+        stateLabel.textContent = "PLAYING";
+        if (statusDot) statusDot.textContent = "SOUND: ON";
+      } else {
+        toggleBtn.textContent = "[ SOUND: OFF ]";
+        toggleBtn.classList.remove("active-state");
+        stateLabel.textContent = "MUTED";
+        if (statusDot) statusDot.textContent = "SOUND: OFF";
+      }
+    }
+
+    function toggleBgm() {
+      if (audio.paused) {
+        userMuted = false;
+        audio.play().then(() => {
+          updateBgmUI(true);
+        }).catch(() => {
+          updateBgmUI(false);
+          stateLabel.textContent = "NO BGM.MP3";
+        });
+      } else {
+        userMuted = true;
+        audio.pause();
+        updateBgmUI(false);
+      }
+    }
+
+    // Attempt immediate autoplay on page load
+    function attemptAutoplay() {
+      if (userMuted) return;
+      audio.play().then(() => {
+        updateBgmUI(true);
+      }).catch(() => {
+        // Browser policy blocked unmuted autoplay before first tap/click;
+        // keep UI ready and start on the very first interaction anywhere.
+        updateBgmUI(false);
+        stateLabel.textContent = "TAP TO START";
+      });
+    }
+
+    // One-time unlock listener for browsers that require 1 gesture before audio starts
+    function unlockAudioOnFirstGesture() {
+      if (!userMuted && audio.paused) {
+        audio.play().then(() => {
+          updateBgmUI(true);
+        }).catch(() => {});
+      }
+      document.removeEventListener("click", unlockAudioOnFirstGesture);
+      document.removeEventListener("touchstart", unlockAudioOnFirstGesture);
+      document.removeEventListener("keydown", unlockAudioOnFirstGesture);
+    }
+
+    document.addEventListener("click", unlockAudioOnFirstGesture);
+    document.addEventListener("touchstart", unlockAudioOnFirstGesture, { passive: true });
+    document.addEventListener("keydown", unlockAudioOnFirstGesture);
+
+    /**
+     * =========================================================================
+     * 4. EXTRAS.DIR — MODULAR SYSTEM FOR FUTURE TOYS & WIDGETS
+     * =========================================================================
+     */
+    let activeExtraIndex = 0;
+    let pulseCount = 0;
+    const padState = new Array(64).fill(0);
+
+    function renderExtrasList() {
+      const listEl = document.getElementById("extras-list");
+      listEl.innerHTML = "";
+      CONFIG.extras.forEach((item, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "os-btn !py-1 !px-2 !text-[10px] w-full";
+        if (idx === activeExtraIndex) {
+          btn.classList.add("active-state");
+        }
+        btn.textContent = item.id;
+        btn.onclick = () => {
+          activeExtraIndex = idx;
+          renderExtrasList();
+          renderExtraViewport();
+        };
+        listEl.appendChild(btn);
+      });
+    }
+
+    function renderExtraViewport() {
+      const viewport = document.getElementById("extra-viewport");
+      const item = CONFIG.extras[activeExtraIndex];
+      viewport.innerHTML = "";
+
+      if (!item) return;
+
+      if (item.type === "text") {
+        const wrap = document.createElement("div");
+        wrap.className = "space-y-1";
+        item.lines.forEach(line => {
+          const p = document.createElement("div");
+          p.textContent = line;
+          wrap.appendChild(p);
+        });
+        viewport.appendChild(wrap);
+      } else if (item.type === "counter") {
+        viewport.innerHTML = `
+          <div class="flex flex-col items-center justify-center h-full gap-2 py-2">
+            <div class="font-pixel text-xs">${item.label}: <span id="pulse-val">${pulseCount}</span></div>
+            <button class="os-btn" id="pulse-btn">[ + PULSE ]</button>
+          </div>
+        `;
+        document.getElementById("pulse-btn").onclick = () => {
+          pulseCount++;
+          document.getElementById("pulse-val").textContent = pulseCount;
+        };
+      } else if (item.type === "action") {
+        viewport.innerHTML = `
+          <div class="flex flex-col items-center justify-center h-full gap-2 py-2">
+            <div class="font-pixel text-[10px]">MODULE: ${item.id}</div>
+            <button class="os-btn" id="extra-action-btn">[ ${item.label} ]</button>
+          </div>
+        `;
+        document.getElementById("extra-action-btn").onclick = () => {
+          runCmd(item.cmd);
+        };
+      } else if (item.type === "pixelpad") {
+        const topRow = document.createElement("div");
+        topRow.className = "flex items-center justify-between gap-2";
+
+        const grid = document.createElement("div");
+        grid.className = "grid grid-cols-8 border border-[var(--fg)] w-24 h-24 shrink-0";
+
+        padState.forEach((val, i) => {
+          const cell = document.createElement("div");
+          cell.className = "border border-[var(--fg)] border-opacity-20 cursor-pointer";
+          cell.style.backgroundColor = val ? "var(--fg)" : "var(--bg)";
+          cell.onclick = () => {
+            padState[i] = padState[i] ? 0 : 1;
+            cell.style.backgroundColor = padState[i] ? "var(--fg)" : "var(--bg)";
+          };
+          grid.appendChild(cell);
+        });
+
+        const side = document.createElement("div");
+        side.className = "flex flex-col gap-1.5 flex-1";
+        side.innerHTML = `
+          <div class="font-pixel text-[10px]">8x8 DRAW</div>
+          <button class="os-btn !text-[9px] !py-1" id="pad-clear">[CLEAR]</button>
+          <button class="os-btn !text-[9px] !py-1" id="pad-inv">[INVERT]</button>
+        `;
+
+        topRow.appendChild(grid);
+        topRow.appendChild(side);
+        viewport.appendChild(topRow);
+
+        document.getElementById("pad-clear").onclick = () => {
+          padState.fill(0);
+          renderExtraViewport();
+        };
+        document.getElementById("pad-inv").onclick = () => {
+          for (let i = 0; i < padState.length; i++) padState[i] = padState[i] ? 0 : 1;
+          renderExtraViewport();
+        };
+      }
+    }
+
+    /**
+     * =========================================================================
+     * 5. WINDOW MANAGER (DRAGGING ON DESKTOP, SCROLL TO VIEW ON MOBILE)
+     * =========================================================================
+     */
+    let topZ = 30;
+
+    function focusWindow(winEl) {
+      topZ++;
+      winEl.style.zIndex = topZ;
+      document.querySelectorAll(".os-window").forEach(w => w.classList.remove("active-win"));
+      winEl.classList.add("active-win");
+    }
+
+    function openWindow(id) {
+      const win = document.getElementById(id);
+      if (!win) return;
+      win.classList.remove("hidden");
+      focusWindow(win);
+      if (window.innerWidth <= 768) {
+        win.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+      if (id === "win-term") {
+        setTimeout(() => document.getElementById("term-input").focus(), 50);
+      }
+    }
+
+    function closeWindow(id) {
+      const win = document.getElementById(id);
+      if (!win) return;
+      win.classList.add("hidden");
+    }
+
+    document.querySelectorAll(".os-window").forEach(win => {
+      win.addEventListener("mousedown", () => focusWindow(win));
+    });
+
+    let dragTarget = null;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+
+    document.querySelectorAll("[data-drag]").forEach(bar => {
+      bar.addEventListener("mousedown", (e) => {
+        if (window.innerWidth <= 768) return;
+        if (e.target.tagName === "BUTTON") return;
+        const winId = bar.getAttribute("data-drag");
+        dragTarget = document.getElementById(winId);
+        focusWindow(dragTarget);
+        const rect = dragTarget.getBoundingClientRect();
+        dragOffsetX = e.clientX - rect.left;
+        dragOffsetY = e.clientY - rect.top;
+      });
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!dragTarget) return;
+      const desktop = document.getElementById("desktop-area").getBoundingClientRect();
+      let newX = e.clientX - desktop.left - dragOffsetX;
+      let newY = e.clientY - desktop.top - dragOffsetY;
+
+      newX = Math.max(0, Math.min(newX, desktop.width - dragTarget.offsetWidth));
+      newY = Math.max(0, Math.min(newY, desktop.height - dragTarget.offsetHeight));
+
+      dragTarget.style.left = `${newX}px`;
+      dragTarget.style.top = `${newY}px`;
+    });
+
+    window.addEventListener("mouseup", () => {
+      dragTarget = null;
+    });
+
+    /**
+     * =========================================================================
+     * 6. EXPANDED TERMINAL CONSOLE (TERM.SH) WITH HISTORY & 18+ COMMANDS
+     * =========================================================================
+     */
+    const termForm = document.getElementById("term-form");
+    const termInput = document.getElementById("term-input");
+    const termOutput = document.getElementById("term-output");
+
+    const cmdHistory = [];
+    let historyIdx = -1;
+
+    function printTerm(text, isPre = false) {
+      const line = document.createElement(isPre ? "pre" : "div");
+      if (isPre) {
+        line.className = "font-mono text-xs leading-none my-1 whitespace-pre overflow-x-auto";
+      }
+      line.textContent = text;
+      termOutput.appendChild(line);
+      termOutput.scrollTop = termOutput.scrollHeight;
+    }
+
+    function triggerGlitch() {
+      document.body.classList.add("glitching");
+      setTimeout(() => document.body.classList.remove("glitching"), 450);
+    }
+
+    function triggerReboot() {
+      const overlay = document.getElementById("reboot-overlay");
+      const log = document.getElementById("reboot-log");
+      log.innerHTML = "";
+      overlay.classList.remove("hidden");
+      overlay.classList.add("flex");
+
+      const steps = [
+        "SHUTTING DOWN KERNEL...",
+        "CHECKING 1-BIT VRAM... 64KB OK",
+        "MOUNTING USER.SYS... OK",
+        "LOADING BGM.MP3 STREAM... OK",
+        "SYSTEM READY."
+      ];
+
+      steps.forEach((msg, i) => {
+        setTimeout(() => {
+          const d = document.createElement("div");
+          d.textContent = msg;
+          log.appendChild(d);
+        }, i * 260);
+      });
+
+      setTimeout(() => {
+        overlay.classList.add("hidden");
+        overlay.classList.remove("flex");
+        termOutput.innerHTML = "";
+        printTerm("REBOOT COMPLETE. TYPE 'HELP'.");
+      }, steps.length * 270 + 250);
+    }
+
+    function getUptime() {
+      const sec = Math.floor((Date.now() - bootTimestamp) / 1000);
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${m}M ${s}S`;
+    }
+
+    function runCmd(rawInput) {
+      const raw = rawInput.trim();
+      if (!raw) return;
+
+      cmdHistory.push(raw);
+      historyIdx = cmdHistory.length;
+
+      printTerm(`> ${raw.toUpperCase()}`);
+
+      const parts = raw.split(/\s+/);
+      const cmd = parts[0].toLowerCase();
+      const arg = parts.slice(1).join(" ");
+
+      switch (cmd) {
+        case "help":
+        case "?":
+          printTerm("AVAILABLE COMMANDS:");
+          printTerm("  ABOUT / WHOAMI : USER INFO");
+          printTerm("  SYS / NEOFETCH : SYSTEM SPECS");
+          printTerm("  LS             : LIST FILES");
+          printTerm("  CAT <FILE>     : READ FILE");
+          printTerm("  LINKS          : SHOW LINKS");
+          printTerm("  OPEN <TARGET>  : DISCORD|TG|SC");
+          printTerm("  BGM / MUTE     : TOGGLE SOUND");
+          printTerm("  INVERT         : 1-BIT THEME");
+          printTerm("  CRT            : SCANLINES");
+          printTerm("  GLITCH         : SCREEN GLITCH");
+          printTerm("  PET / MEOW     : CAT MODULE");
+          printTerm("  COIN / ROLL    : RNG TOOLS");
+          printTerm("  TIME / UPTIME  : SYSTEM CLOCK");
+          printTerm("  ECHO <TEXT>    : PRINT TEXT");
+          printTerm("  REBOOT         : RESTART OS");
+          printTerm("  CLEAR / CLS    : CLEAR SCREEN");
+          break;
+
+        case "about":
+        case "whoami":
+          printTerm(`ID     : ${CONFIG.profile.id}`);
+          printTerm(`ROLE   : ${CONFIG.profile.role}`);
+          printTerm(`STATUS : ${CONFIG.profile.status}`);
+          printTerm(`NOTE   : ${CONFIG.profile.bio}`);
+          break;
+
+        case "sys":
+        case "neofetch":
+          printTerm(
+            "  /\\_/\\    OS: ATOM_OS 1-BIT\n" +
+            " [=====]   MEM: 64KB SRAM\n" +
+            " | | | |   DISPLAY: MONO CRT\n" +
+            " == ^ ==   UPTIME: " + getUptime(),
+            true
+          );
+          break;
+
+        case "ls":
+        case "dir":
+          printTerm("FILES: " + Object.keys(CONFIG.files).join("  "));
+          printTerm("USE: CAT <FILENAME>");
+          break;
+
+        case "cat":
+        case "read": {
+          const target = arg.toLowerCase();
+          if (!target) {
+            printTerm("USAGE: CAT README.TXT");
+          } else if (CONFIG.files[target]) {
+            CONFIG.files[target].forEach(l => printTerm(l));
+          } else {
+            printTerm(`ERR: FILE '${target.toUpperCase()}' NOT FOUND.`);
+          }
+          break;
+        }
+
+        case "links":
+          openWindow("win-links");
+          printTerm("1. DISCORD    (OPEN DISCORD)");
+          printTerm("2. TELEGRAM   (OPEN TG)");
+          printTerm("3. SOUNDCLOUD (OPEN SC)");
+          break;
+
+        case "open": {
+          const t = arg.toLowerCase();
+          if (t === "discord" || t === "dc") {
+            window.open(CONFIG.links.discord, "_blank");
+            printTerm("OPENING DISCORD...");
+          } else if (t === "tg" || t === "telegram") {
+            window.open(CONFIG.links.telegram, "_blank");
+            printTerm("OPENING TELEGRAM...");
+          } else if (t === "sc" || t === "soundcloud") {
+            window.open(CONFIG.links.soundcloud, "_blank");
+            printTerm("OPENING SOUNDCLOUD...");
+          } else {
+            printTerm("USAGE: OPEN DISCORD | TG | SC");
+          }
+          break;
+        }
+
+        case "bgm":
+        case "mute":
+        case "sound":
+        case "play":
+        case "stop":
+          toggleBgm();
+          printTerm(audio.paused ? "BGM: MUTED" : "BGM: PLAYING");
+          break;
+
+        case "invert":
+        case "theme":
+          document.body.classList.toggle("inverted");
+          printTerm("1-BIT POLARITY INVERTED.");
+          break;
+
+        case "crt":
+        case "scanlines": {
+          const crt = document.getElementById("crt-overlay");
+          crt.classList.toggle("hidden");
+          printTerm(crt.classList.contains("hidden") ? "CRT: OFF" : "CRT: ON");
+          break;
+        }
+
+        case "glitch":
+          triggerGlitch();
+          printTerm("SIGNAL ANOMALY DETECTED.");
+          break;
+
+        case "pet":
+        case "meow":
+        case "cat":
+          printTerm(
+            "  /\\_/\\  \n" +
+            " ( ^w^ )  < PURR_OK // +1 MORALE >",
+            true
+          );
+          break;
+
+        case "coin":
+        case "flip":
+          printTerm("COIN: " + (Math.random() < 0.5 ? "[ HEADS ]" : "[ TAILS ]"));
+          break;
+
+        case "roll":
+        case "dice": {
+          const r = Math.floor(Math.random() * 100) + 1;
+          printTerm(`ROLLED (1-100): [ ${r} ]`);
+          break;
+        }
+
+        case "time":
+        case "date":
+        case "uptime":
+          printTerm("TIME  : " + new Date().toTimeString().split(" ")[0]);
+          printTerm("UPTIME: " + getUptime());
+          break;
+
+        case "echo":
+          printTerm(arg ? arg.toUpperCase() : "...");
+          break;
+
+        case "sudo":
+          printTerm("ACCESS GRANTED. YOU ARE ALREADY ROOT.");
+          break;
+
+        case "reboot":
+        case "restart":
+          triggerReboot();
+          break;
+
+        case "clear":
+        case "cls":
+          termOutput.innerHTML = "";
+          break;
+
+        default:
+          printTerm(`ERR: UNKNOWN CMD '${cmd.toUpperCase()}'. TYPE 'HELP'.`);
+      }
+    }
+
+    termForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const val = termInput.value;
+      termInput.value = "";
+      runCmd(val);
+    });
+
+    // Command History Navigation (Up / Down Arrows)
+    termInput.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (historyIdx > 0) {
+          historyIdx--;
+          termInput.value = cmdHistory[historyIdx];
+        }
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (historyIdx < cmdHistory.length - 1) {
+          historyIdx++;
+          termInput.value = cmdHistory[historyIdx];
+        } else {
+          historyIdx = cmdHistory.length;
+          termInput.value = "";
+        }
+      }
+    });
+
+    /**
+     * =========================================================================
+     * 7. CLOCK & 1-BIT POLARITY SWITCH
+     * =========================================================================
+     */
+    function updateClock() {
+      const now = new Date();
+      document.getElementById("sys-clock").textContent = now.toTimeString().split(" ")[0];
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    document.getElementById("invert-btn").addEventListener("click", () => {
+      document.body.classList.toggle("inverted");
+    });
+
+    // Boot Initialization
+    initContent();
+    renderExtrasList();
+    renderExtraViewport();
+    attemptAutoplay();
+  </script>
+</body>
+</html>
