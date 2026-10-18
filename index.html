@@ -1,0 +1,2618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SYS // ATOM</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Retro Pixel Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&family=Press+Start+2P&family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #000000;
+      --fg: #ffffff;
+      --font-term: 'VT323', 'Pixelify Sans', monospace;
+      --font-ui: 'Silkscreen', 'Press Start 2P', monospace;
+    }
+
+    body.inverted {
+      --bg: #ffffff;
+      --fg: #000000;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-font-smoothing: none;
+      -moz-osx-font-smoothing: grayscale;
+      font-smooth: never;
+      image-rendering: pixelated;
+      font-family: var(--font-term);
+    }
+
+    body,
+    pre,
+    code,
+    input,
+    textarea,
+    select,
+    .font-mono,
+    #term-output,
+    #term-output *,
+    #term-input,
+    #reboot-overlay,
+    #reboot-overlay * {
+      font-family: var(--font-term) !important;
+      letter-spacing: 0.5px;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg);
+      color: var(--fg);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      font-size: 20px;
+    }
+
+    .font-pixel,
+    .os-title-label,
+    .os-btn,
+    .os-close-btn {
+      font-family: var(--font-ui) !important;
+    }
+
+    /* Animated Semi-Transparent Striped Desktop Background */
+    :root {
+      --stripe-primary: rgba(255, 255, 255, 0.06);
+      --stripe-secondary: rgba(255, 255, 255, 0.03);
+    }
+
+    body.inverted {
+      --stripe-primary: rgba(0, 0, 0, 0.07);
+      --stripe-secondary: rgba(0, 0, 0, 0.035);
+    }
+
+    @keyframes bg-stripes-scroll {
+      0% {
+        background-position: 0 0, 0 0;
+      }
+      100% {
+        background-position: 0 48px, 64px 64px;
+      }
+    }
+
+    .dither-bg {
+      background-color: var(--bg);
+      background-image:
+        repeating-linear-gradient(
+          0deg,
+          var(--stripe-primary) 0px,
+          var(--stripe-primary) 1px,
+          transparent 1px,
+          transparent 8px
+        ),
+        repeating-linear-gradient(
+          -45deg,
+          var(--stripe-secondary) 0px,
+          var(--stripe-secondary) 2px,
+          transparent 2px,
+          transparent 16px
+        );
+      background-size: 100% 48px, 64px 64px;
+      animation: bg-stripes-scroll 12s linear infinite;
+    }
+
+    /* Classic 1-Bit Checkerboard Dither for Window Title Bars */
+    .dither-bar {
+      background-image:
+        linear-gradient(45deg, var(--fg) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--fg) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, var(--fg) 75%),
+        linear-gradient(-45deg, transparent 75%, var(--fg) 75%);
+      background-size: 4px 4px;
+      background-position: 0 0, 0 2px, 2px -2px, -2px 0;
+    }
+
+    /* Retro OS Window Frame with Double Border & Hard Offset Shadow */
+    .os-window {
+      background-color: var(--bg);
+      border: 2px solid var(--fg);
+      box-shadow: 4px 4px 0px var(--fg);
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .os-window.active-win {
+      box-shadow: 6px 6px 0px var(--fg);
+    }
+
+    .os-window-inner {
+      border: 1px solid var(--fg);
+      margin: 2px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .os-titlebar {
+      background-color: var(--bg);
+      border-bottom: 2px solid var(--fg);
+      padding: 4px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: move;
+      height: 28px;
+    }
+
+    .os-title-label {
+      background-color: var(--bg);
+      padding: 0 6px;
+      font-family: 'Silkscreen', monospace;
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* 1-Bit Interactive Button */
+    .os-btn {
+      background-color: var(--bg);
+      color: var(--fg);
+      border: 2px solid var(--fg);
+      font-family: 'Silkscreen', monospace;
+      font-size: 11px;
+      padding: 6px 10px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .os-btn:hover,
+    .os-btn:focus-visible,
+    .os-btn.active-state {
+      background-color: var(--fg);
+      color: var(--bg);
+      outline: none;
+    }
+
+    .os-btn:active {
+      transform: translate(2px, 2px);
+    }
+
+    .os-close-btn {
+      background-color: var(--bg);
+      color: var(--fg);
+      border: 1px solid var(--fg);
+      font-family: 'Silkscreen', monospace;
+      font-size: 10px;
+      width: 20px;
+      height: 20px;
+      line-height: 18px;
+      text-align: center;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .os-close-btn:hover {
+      background-color: var(--fg);
+      color: var(--bg);
+    }
+
+    /* 1-Bit Monochrome Volume Slider */
+    .os-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 14px;
+      background: linear-gradient(
+        to right,
+        var(--fg) 0%,
+        var(--fg) var(--vol-pct, 20%),
+        var(--bg) var(--vol-pct, 20%),
+        var(--bg) 100%
+      );
+      border: 2px solid var(--fg);
+      outline: none;
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .os-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 20px;
+      background-color: var(--fg);
+      border: 2px solid var(--bg);
+      box-shadow: 0 0 0 2px var(--fg);
+      cursor: pointer;
+    }
+
+    .os-slider::-moz-range-thumb {
+      width: 12px;
+      height: 20px;
+      background-color: var(--fg);
+      border: 2px solid var(--bg);
+      box-shadow: 0 0 0 2px var(--fg);
+      border-radius: 0;
+      cursor: pointer;
+    }
+
+    /* Desktop Icon Styling */
+    .desktop-icon {
+      width: 84px;
+      padding: 6px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      background-color: var(--bg);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .desktop-icon:hover {
+      border: 1px dashed var(--fg);
+    }
+
+    .desktop-icon:active,
+    .desktop-icon.selected {
+      background-color: var(--fg);
+      color: var(--bg);
+    }
+
+    /* Subtle CRT scanline overlay (pure 1-bit opacity lines) */
+    .scanlines {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9990;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 2px,
+        rgba(128, 128, 128, 0.08) 3px
+      );
+    }
+
+    /* Screen Glitch Effect */
+    @keyframes glitch-anim {
+      0% { transform: translate(0, 0); filter: invert(0); }
+      20% { transform: translate(-6px, 2px); filter: invert(1); }
+      40% { transform: translate(6px, -2px); }
+      60% { transform: translate(-4px, -2px); filter: invert(1); }
+      80% { transform: translate(4px, 2px); filter: invert(0); }
+      100% { transform: translate(0, 0); }
+    }
+
+    body.glitching {
+      animation: glitch-anim 0.28s steps(2, end) infinite;
+    }
+
+    /* Blinking terminal cursor */
+    .cursor-blink {
+      display: inline-block;
+      width: 8px;
+      height: 14px;
+      background-color: var(--fg);
+      vertical-align: middle;
+      animation: blink 1s steps(2, start) infinite;
+    }
+
+    @keyframes blink {
+      to { visibility: hidden; }
+    }
+
+    /* Custom Scrollbar for Console/Logs */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+      border-left: 1px solid var(--fg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--fg);
+    }
+
+    /* Allow selection inside terminal output */
+    #term-output, #term-output * {
+      user-select: text;
+      font-size: 20px;
+      line-height: 1.15;
+    }
+
+    #term-output pre {
+      font-size: 18px !important;
+      line-height: 1.05 !important;
+    }
+
+    #term-input {
+      font-size: 20px !important;
+      line-height: 1.15 !important;
+    }
+
+    #term-input::placeholder {
+      font-family: var(--font-term) !important;
+      color: var(--fg);
+      opacity: 0.6;
+    }
+
+    /* Dialogue Screen Darkened ("No response.") State */
+    #talk-screen {
+      transition: opacity 0.25s steps(4, end), background-color 0.25s steps(4, end);
+    }
+
+    #talk-screen.screen-darkened {
+      background-color: #000000 !important;
+      color: #ffffff !important;
+      border-color: rgba(255, 255, 255, 0.25) !important;
+    }
+
+    body.inverted #talk-screen.screen-darkened {
+      background-color: #000000 !important;
+      color: #ffffff !important;
+    }
+
+    @keyframes no-resp-fade {
+      0% { opacity: 0; }
+      100% { opacity: 0.75; }
+    }
+
+    .no-response-text {
+      animation: no-resp-fade 0.45s steps(3, end) forwards;
+    }
+
+    /* Mobile & Tablet Responsive Layout (<=768px) */
+    @media (max-width: 768px) {
+      body {
+        overflow-y: auto;
+        overflow-x: hidden;
+        height: auto;
+        min-height: 100vh;
+      }
+      #desktop-area {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 10px;
+        padding-bottom: 60px;
+        height: auto !important;
+        overflow: visible !important;
+      }
+      .os-window {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-shadow: 3px 3px 0px var(--fg);
+      }
+      .os-titlebar {
+        cursor: default;
+        height: 32px;
+      }
+      #desktop-icons {
+        display: grid !important;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 6px;
+        width: 100% !important;
+        position: relative !important;
+      }
+      .desktop-icon {
+        width: 100% !important;
+        padding: 6px 2px;
+        border: 1px solid var(--fg);
+      }
+      /* Prevent iOS Safari zoom on input focus while keeping custom pixel font */
+      #term-input,
+      #talk-input {
+        font-size: 20px !important;
+      }
+    }
+  </style>
+</head>
+<body class="dither-bg">
+
+  <!-- Live Background Particles & Semi-Transparent Stripes Canvas -->
+  <canvas id="bg-particles-canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+  <!-- Scanline Overlay -->
+  <div id="crt-overlay" class="scanlines"></div>
+
+  <!-- Reboot Overlay Screen -->
+  <div id="reboot-overlay" class="fixed inset-0 bg-[var(--bg)] text-[var(--fg)] z-[9999] hidden flex-col justify-center items-start p-6 text-2xl">
+    <div id="reboot-log" class="space-y-1"></div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- REAL HTML5 AUDIO ELEMENT (AUTOPLAY + LOOP, SUPPORTS MP3 & M4A)        -->
+  <!-- Place "bgm.mp3" (or "bgm.m4a") in the same repository folder          -->
+  <!-- ===================================================================== -->
+  <audio id="bgm-audio" autoplay loop preload="auto">
+    <source src="bgm.mp3" type="audio/mpeg" />
+    <source src="bgm.m4a" type="audio/mp4" />
+  </audio>
+
+  <!-- Top System Status Bar -->
+  <header class="w-full h-9 border-b-2 border-[var(--fg)] bg-[var(--bg)] px-3 flex items-center justify-between z-50 sticky top-0">
+    <div class="flex items-center gap-3">
+      <span class="font-pixel text-xs tracking-wider">[SYS://ATOM_OS]</span>
+      <span class="text-sm hidden sm:inline">MEM: 64KB OK</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="invert-btn" class="os-btn !py-0.5 !px-2 !text-[10px]" title="Invert 1-Bit Polarity">
+        [INVERT]
+      </button>
+      <span id="sys-clock" class="font-pixel text-xs">00:00:00</span>
+    </div>
+  </header>
+
+  <!-- Main Desktop Workspace -->
+  <main id="desktop-area" class="relative w-full h-[calc(100vh-72px)] overflow-hidden p-4">
+
+    <!-- Desktop Shortcut Icons -->
+    <nav id="desktop-icons" class="flex flex-col gap-3 z-10 w-24">
+      <div class="desktop-icon" onclick="openWindow('win-profile')">
+        <svg class="w-7 h-7" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M2 1h12v14H2V1zm2 2v10h8V3H4zm2 2h4v3H6V5zm-1 5h6v2H5v-2z"/>
+        </svg>
+        <span class="font-pixel text-[9px] sm:text-[10px] text-center leading-tight">USER.SYS</span>
+      </div>
+
+      <div class="desktop-icon" onclick="openWindow('win-links')">
+        <svg class="w-7 h-7" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M9 2h5v5h-2V5h-2v2H8V5h2V4H9V2zM6 6h4v4H6V6zm-4 3h2v2h2v2H2V9zm5 2h2v3H4v-2h3v-1z"/>
+        </svg>
+        <span class="font-pixel text-[9px] sm:text-[10px] text-center leading-tight">LINKS.EXE</span>
+      </div>
+
+      <div class="desktop-icon" onclick="openWindow('win-bgm')">
+        <svg class="w-7 h-7" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M6 2h8v9h-4v-3h2V4H8v9H4v-3h2V2z"/>
+        </svg>
+        <span class="font-pixel text-[9px] sm:text-[10px] text-center leading-tight">BGM.MP3</span>
+      </div>
+
+      <div class="desktop-icon" onclick="openWindow('win-term')">
+        <svg class="w-7 h-7" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M1 2h14v12H1V2zm2 2v8h10V4H3zm1 1h2v1H4V5zm2 1h2v1H6V6zM4 7h2v1H4V7zm3 2h4v1H7V9z"/>
+        </svg>
+        <span class="font-pixel text-[9px] sm:text-[10px] text-center leading-tight">TERM.SH</span>
+      </div>
+
+      <div class="desktop-icon" onclick="openWindow('win-extras')">
+        <svg class="w-7 h-7" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M1 2h6l2 2h6v10H1V2zm2 2v8h10V6H8L6 4H3z"/>
+        </svg>
+        <span class="font-pixel text-[9px] sm:text-[10px] text-center leading-tight">EXTRAS.DIR</span>
+      </div>
+
+      <div class="desktop-icon" onclick="openWindow('win-talk')">
+        <svg class="w-7 h-7" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M1 2h14v10H6l-3 3v-3H1V2zm2 2v6h2v1.5L6.5 10H13V4H3zm2 2h6v1H5V6zm0 2h4v1H5V8z"/>
+        </svg>
+        <span class="font-pixel text-[9px] sm:text-[10px] text-center leading-tight">TALK.EXE</span>
+      </div>
+    </nav>
+
+    <!-- =================================================================== -->
+    <!-- WINDOW 1: USER.SYS (PROFILE + CLICKABLE 9-EMOTION PIXEL LOGO)       -->
+    <!-- =================================================================== -->
+    <section id="win-profile" class="os-window w-[300px]" style="top: 20px; left: 118px; z-index: 20;">
+      <div class="os-window-inner">
+        <div class="os-titlebar dither-bar" data-drag="win-profile">
+          <span class="os-title-label">USER.SYS</span>
+          <button class="os-close-btn" onclick="closeWindow('win-profile')">X</button>
+        </div>
+
+        <div class="p-3.5 flex flex-col gap-3">
+          <div class="flex items-center gap-3.5">
+            <!-- Clickable 1-Bit Pixel Cat Avatar (Cycles through all 9 emotions on click) -->
+            <div
+              id="profile-avatar-box"
+              onclick="cycleProfileEmotion()"
+              title="Click to change Atom's emotion (1-9)"
+              class="w-20 h-20 border-2 border-[var(--fg)] bg-black flex items-center justify-center shrink-0 overflow-hidden relative cursor-pointer group active:translate-x-[1px] active:translate-y-[1px]"
+            >
+              <svg id="fallback-logo-svg" class="w-full h-full" viewBox="0 0 32 32" shape-rendering="crispEdges">
+                <rect width="32" height="32" fill="#000000" />
+                <g id="profile-cat-pixels" fill="#ffffff"></g>
+              </svg>
+              <span id="profile-emo-badge" class="absolute bottom-0 right-0 bg-black text-white font-pixel text-[8px] px-1 border-t border-l border-white opacity-80 group-hover:opacity-100">
+                1/9
+              </span>
+            </div>
+
+            <!-- Concise Bio Data -->
+            <div class="flex flex-col text-lg leading-tight space-y-1 min-w-0">
+              <div class="truncate"><span class="opacity-70">ID:</span> <span id="info-id" class="font-bold">ATOM</span></div>
+              <div class="truncate"><span class="opacity-70">ROLE:</span> <span id="info-role">CREATOR</span></div>
+              <div class="flex items-center gap-1.5">
+                <span class="opacity-70">STAT:</span>
+                <span class="inline-block w-2 h-2 bg-[var(--fg)]"></span>
+                <span id="info-status">ONLINE</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-dashed border-[var(--fg)] pt-2 text-base flex items-center justify-between">
+            <span id="info-bio">WELCOME TO MY NODE.</span>
+            <span class="cursor-blink"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- WINDOW 2: LINKS.EXE (STRICTLY DISCORD, TELEGRAM, SOUNDCLOUD)        -->
+    <!-- =================================================================== -->
+    <section id="win-links" class="os-window w-[300px]" style="top: 20px; left: 428px; z-index: 21;">
+      <div class="os-window-inner">
+        <div class="os-titlebar dither-bar" data-drag="win-links">
+          <span class="os-title-label">LINKS.EXE</span>
+          <button class="os-close-btn" onclick="closeWindow('win-links')">X</button>
+        </div>
+
+        <div class="p-3.5 flex flex-col gap-2.5">
+          <a id="link-discord" href="#" target="_blank" rel="noopener noreferrer" class="os-btn w-full !justify-between">
+            <span>[01] DISCORD</span>
+            <span>-&gt;</span>
+          </a>
+
+          <a id="link-telegram" href="#" target="_blank" rel="noopener noreferrer" class="os-btn w-full !justify-between">
+            <span>[02] TELEGRAM</span>
+            <span>-&gt;</span>
+          </a>
+
+          <a id="link-soundcloud" href="#" target="_blank" rel="noopener noreferrer" class="os-btn w-full !justify-between">
+            <span>[03] SOUNDCLOUD</span>
+            <span>-&gt;</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- WINDOW 3: BGM.MP3 (BIG ON / OFF BUTTON + 1-BIT VOLUME SLIDER)       -->
+    <!-- =================================================================== -->
+    <section id="win-bgm" class="os-window w-[300px]" style="top: 230px; left: 428px; z-index: 22;">
+      <div class="os-window-inner">
+        <div class="os-titlebar dither-bar" data-drag="win-bgm">
+          <span class="os-title-label">BGM.MP3</span>
+          <button class="os-close-btn" onclick="closeWindow('win-bgm')">X</button>
+        </div>
+
+        <div class="p-4 flex flex-col gap-3 items-center justify-center">
+          <!-- Big Chunky ON / OFF Toggle Button -->
+          <button
+            id="bgm-toggle-btn"
+            onclick="toggleBgm()"
+            class="os-btn w-full !py-4 !text-sm sm:!text-base tracking-wider border-2 border-[var(--fg)]"
+          >
+            [ SOUND: ON ]
+          </button>
+
+          <!-- 1-Bit Volume Slider Control -->
+          <div class="w-full flex flex-col gap-1.5 pt-1">
+            <div class="flex items-center justify-between">
+              <span class="font-pixel text-[10px]" id="bgm-vol-label">VOL: 20%</span>
+              <span id="bgm-ascii-viz" class="font-pixel text-[10px] tracking-widest">[||........]</span>
+            </div>
+            <input
+              id="bgm-volume-slider"
+              type="range"
+              min="0"
+              max="100"
+              value="20"
+              class="os-slider"
+              aria-label="Volume"
+            />
+          </div>
+
+          <!-- Minimal 1-Bit Status Line -->
+          <div class="w-full flex items-center justify-between text-sm border-t border-dashed border-[var(--fg)] pt-2 px-1">
+            <span>CHANNEL: BGM_LOOP</span>
+            <span id="bgm-state-label" class="font-pixel text-[10px]">ACTIVE</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- WINDOW 4: EXTRAS.DIR (MODULAR SYSTEM FOR FUTURE STUFF / TOYS)       -->
+    <!-- =================================================================== -->
+    <section id="win-extras" class="os-window w-[290px]" style="top: 300px; left: 118px; z-index: 23;">
+      <div class="os-window-inner">
+        <div class="os-titlebar dither-bar" data-drag="win-extras">
+          <span class="os-title-label">EXTRAS.DIR</span>
+          <button class="os-close-btn" onclick="closeWindow('win-extras')">X</button>
+        </div>
+
+        <div class="p-3 flex flex-col gap-2">
+          <!-- Module Selector Tabs rendered from CONFIG.extras -->
+          <div id="extras-list" class="grid grid-cols-2 gap-1.5"></div>
+
+          <!-- Active Module Viewport -->
+          <div id="extra-viewport" class="border border-[var(--fg)] p-2.5 min-h-[112px] text-base flex flex-col justify-between"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- WINDOW 5: TERM.SH (EXPANDED INTERACTIVE CONSOLE)                    -->
+    <!-- =================================================================== -->
+    <section id="win-term" class="os-window w-[360px]" style="top: 20px; left: 748px; z-index: 24;">
+      <div class="os-window-inner">
+        <div class="os-titlebar dither-bar" data-drag="win-term">
+          <span class="os-title-label">TERM.SH</span>
+          <button class="os-close-btn" onclick="closeWindow('win-term')">X</button>
+        </div>
+
+        <div class="p-3 flex flex-col gap-2 h-[290px] sm:h-[320px]">
+          <div id="term-output" class="flex-1 overflow-y-auto space-y-1 pr-1">
+            <div>ATOM_OS KERNEL V1.04 READY.</div>
+            <div>TYPE <span class="underline cursor-pointer" onclick="runCmd('help')">HELP</span> FOR COMMANDS.</div>
+          </div>
+
+          <!-- Quick tap chips for mobile convenience -->
+          <div class="flex flex-wrap gap-1 pt-1 border-t border-dashed border-[var(--fg)]">
+            <button type="button" class="os-btn !py-0.5 !px-1.5 !text-[9px]" onclick="runCmd('help')">HELP</button>
+            <button type="button" class="os-btn !py-0.5 !px-1.5 !text-[9px]" onclick="runCmd('words')">WORDS</button>
+            <button type="button" class="os-btn !py-0.5 !px-1.5 !text-[9px]" onclick="runCmd('sentences')">SENTENCES</button>
+            <button type="button" class="os-btn !py-0.5 !px-1.5 !text-[9px]" onclick="runCmd('sys')">SYS</button>
+            <button type="button" class="os-btn !py-0.5 !px-1.5 !text-[9px]" onclick="runCmd('ls')">LS</button>
+            <button type="button" class="os-btn !py-0.5 !px-1.5 !text-[9px]" onclick="runCmd('pet')">PET</button>
+            <button type="button" class="os-btn !py-0.5 !px-1.5 !text-[9px]" onclick="runCmd('glitch')">GLITCH</button>
+            <button type="button" class="os-btn !py-0.5 !px-1.5 !text-[9px]" onclick="runCmd('clear')">CLR</button>
+          </div>
+
+          <form id="term-form" class="flex items-center border-t-2 border-[var(--fg)] pt-2 gap-1.5">
+            <span class="font-pixel text-xs">&gt;</span>
+            <input
+              id="term-input"
+              type="text"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              placeholder="TYPE COMMAND..."
+              class="bg-transparent text-[var(--fg)] focus:outline-none w-full"
+            />
+            <button type="submit" class="os-btn !py-1 !px-2 !text-[10px]">RUN</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================================================================== -->
+    <!-- WINDOW 6: TALK.EXE (UNDERTALE-STYLE DIALOGUE WITH ATOM)             -->
+    <!-- =================================================================== -->
+    <section id="win-talk" class="os-window w-[360px]" style="top: 360px; left: 748px; z-index: 25;">
+      <div class="os-window-inner">
+        <div class="os-titlebar dither-bar" data-drag="win-talk">
+          <span class="os-title-label">TALK.EXE // ATOM</span>
+          <button class="os-close-btn" onclick="closeWindow('win-talk')">X</button>
+        </div>
+
+        <div class="p-3 flex flex-col gap-2.5">
+          <!-- Dialogue Screen Viewport (Dims on unknown phrase -> "... No response.") -->
+          <div
+            id="talk-screen"
+            class="border-2 border-[var(--fg)] bg-[var(--bg)] p-2.5 min-h-[108px] flex items-center gap-3 relative overflow-hidden"
+          >
+            <!-- Normal Dialogue Content -->
+            <div id="talk-active-view" class="flex items-start gap-3 w-full">
+              <!-- Atom Emotion Portrait -->
+              <div class="w-16 h-16 border-2 border-[var(--fg)] bg-black shrink-0 flex items-center justify-center relative">
+                <svg class="w-full h-full" viewBox="0 0 32 32" shape-rendering="crispEdges">
+                  <rect width="32" height="32" fill="#000000" />
+                  <g id="talk-cat-pixels" fill="#ffffff"></g>
+                </svg>
+              </div>
+
+              <!-- Typewriter Speech Box -->
+              <div class="flex-1 min-w-0 flex flex-col justify-between min-h-[64px]">
+                <div class="text-lg leading-snug break-words">
+                  <span class="font-pixel text-[10px] mr-1">*</span><span id="talk-text"></span><span id="talk-cursor" class="cursor-blink ml-1"></span>
+                </div>
+                <div class="flex items-center justify-between text-xs opacity-60 pt-1">
+                  <span id="talk-emo-label" class="font-pixel text-[9px]">EMO: IDLE</span>
+                  <span
+                    class="font-pixel text-[8px] underline cursor-pointer hover:opacity-100"
+                    onclick="openWindow('win-term'); runCmd('words');"
+                    title="Show all trigger words and sentences in TERM.SH"
+                  >[WORDS &amp; SENTENCES]</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Darkened "No response." Overlay -->
+            <div id="talk-no-response" class="hidden w-full h-full flex-col items-center justify-center text-center py-4 select-none">
+              <div id="talk-no-resp-dots" class="text-2xl tracking-widest mb-1">...</div>
+              <div id="talk-no-resp-msg" class="text-lg opacity-80 font-mono">No response.</div>
+            </div>
+          </div>
+
+          <!-- Input Bar to Talk to Atom -->
+          <form id="talk-form" class="flex items-center gap-1.5">
+            <span class="font-pixel text-xs">&gt;</span>
+            <input
+              id="talk-input"
+              type="text"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              placeholder="SAY SOMETHING TO ATOM..."
+              class="bg-transparent text-[var(--fg)] border-b-2 border-[var(--fg)] focus:outline-none w-full py-0.5 text-lg"
+            />
+            <button type="submit" class="os-btn !py-1 !px-2.5 !text-[10px]">SAY</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Taskbar -->
+  <footer class="w-full h-9 border-t-2 border-[var(--fg)] bg-[var(--bg)] px-2 sm:px-3 flex items-center justify-between z-50 fixed bottom-0 left-0">
+    <div class="flex items-center gap-1 overflow-x-auto py-1">
+      <button class="os-btn !py-0.5 !px-2 !text-[10px]" onclick="openWindow('win-profile')">USER</button>
+      <button class="os-btn !py-0.5 !px-2 !text-[10px]" onclick="openWindow('win-links')">LINKS</button>
+      <button class="os-btn !py-0.5 !px-2 !text-[10px]" onclick="openWindow('win-bgm')">BGM</button>
+      <button class="os-btn !py-0.5 !px-2 !text-[10px]" onclick="openWindow('win-term')">TERM</button>
+      <button class="os-btn !py-0.5 !px-2 !text-[10px]" onclick="openWindow('win-extras')">EXTRAS</button>
+      <button class="os-btn !py-0.5 !px-2 !text-[10px]" onclick="openWindow('win-talk')">TALK</button>
+    </div>
+    <div class="text-sm hidden sm:flex items-center gap-2">
+      <span id="bgm-status-dot" class="font-pixel text-[10px]">SOUND: ON</span>
+      <span class="cursor-blink"></span>
+    </div>
+  </footer>
+
+  <!-- ===================================================================== -->
+  <!-- SYSTEM CONFIGURATION & SCRIPTS                                        -->
+  <!-- ===================================================================== -->
+  <script>
+    /**
+     * =========================================================================
+     * 1. EASY CONFIGURATION — EDIT YOUR INFO, LINKS, MP3 & VIRTUAL FILES HERE
+     * =========================================================================
+     */
+    const CONFIG = {
+      // Info shown in USER.SYS
+      profile: {
+        id: "ATOM",
+        role: "CREATOR / NETRUNNER",
+        status: "ONLINE",
+        bio: "WELCOME TO MY NODE."
+      },
+
+      // Strictly 3 links: Discord, Telegram, SoundCloud
+      links: {
+        discord: "https://discord.com/users/935847869368393768",
+        telegram: "https://t.me/Atoms_qwq_music",
+        soundcloud: "https://soundcloud.com/atom52panzer?ref=clipboard&p=a&c=1&si=ecc7c6caf3724886b96dfad2e527f008&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing"
+      },
+
+      // Background music file name in your GitHub repository
+      bgmFile: "bgm.mp3",
+
+      // Virtual files readable via 'ls' and 'cat <filename>' in TERM.SH
+      files: {
+        "readme.txt": [
+          "=== README.TXT ===",
+          "NODE: ATOM PERSONAL HUB",
+          "ARCH: 1-BIT MONOCHROME OS",
+          "USE LINKS.EXE TO CONNECT."
+        ],
+        "links.dat": [
+          "=== LINKS.DAT ===",
+          "1. DISCORD    -> [OPEN DISCORD]",
+          "2. TELEGRAM   -> [OPEN TG]",
+          "3. SOUNDCLOUD -> [OPEN SC]"
+        ],
+        "secret.txt": [
+          "=== SECRET.TXT ===",
+          "[LIGHTBULB_PROTOCOL: INTACT]",
+          "THE ENTITY IS WATCHING.",
+          "=^..^=  STAY DETERMINED."
+        ]
+      },
+
+      // Modular items in EXTRAS.DIR — easily add new widgets here in the future!
+      extras: [
+        { id: "PAD.EXE", type: "pixelpad" },
+        { id: "CLICKER.BIN", type: "counter", label: "PULSES" },
+        { id: "GLITCH.EXE", type: "action", label: "TRIGGER GLITCH", cmd: "glitch" },
+        {
+          id: "NOTES.TXT",
+          type: "text",
+          lines: [
+            "[01] 1-BIT CORE ONLINE.",
+            "[02] BGM LOOP ARMED.",
+            "[03] MORE TOYS SOON."
+          ]
+        }
+      ]
+    };
+
+    const bootTimestamp = Date.now();
+
+    /**
+     * =========================================================================
+     * 2. INITIALIZE PROFILE & LINKS
+     * =========================================================================
+     */
+    function initContent() {
+      const setTxt = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      };
+      const setHref = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.href = val;
+      };
+
+      setTxt("info-id", CONFIG.profile.id);
+      setTxt("info-role", CONFIG.profile.role);
+      setTxt("info-status", CONFIG.profile.status);
+      setTxt("info-bio", CONFIG.profile.bio);
+
+      setHref("link-discord", CONFIG.links.discord);
+      setHref("link-telegram", CONFIG.links.telegram);
+      setHref("link-soundcloud", CONFIG.links.soundcloud);
+    }
+
+    /**
+     * =========================================================================
+     * 3. BGM.MP3 — BIG ON/OFF BUTTON + 1-BIT VOLUME SLIDER + AUTOPLAY
+     * =========================================================================
+     */
+    const audio = document.getElementById("bgm-audio");
+    const toggleBtn = document.getElementById("bgm-toggle-btn");
+    const stateLabel = document.getElementById("bgm-state-label");
+    const statusDot = document.getElementById("bgm-status-dot");
+    const volSlider = document.getElementById("bgm-volume-slider");
+    const volLabel = document.getElementById("bgm-vol-label");
+    const asciiViz = document.getElementById("bgm-ascii-viz");
+
+    let currentVolPct = 20;
+    let lastNonZeroVolPct = 20;
+    audio.volume = currentVolPct / 100;
+    let userMuted = false; // Tracks if the user explicitly turned sound OFF
+
+    function renderAsciiViz(isPlaying) {
+      if (!asciiViz) return;
+      if (!isPlaying || currentVolPct === 0) {
+        asciiViz.textContent = "[..........]";
+        return;
+      }
+      const maxBars = Math.max(1, Math.round(currentVolPct / 10));
+      const jitter = Math.floor(Math.random() * 3) - 1;
+      const activeBars = Math.max(1, Math.min(10, maxBars + jitter));
+      asciiViz.textContent = "[" + "|".repeat(activeBars) + ".".repeat(10 - activeBars) + "]";
+    }
+
+    setInterval(() => {
+      renderAsciiViz(!audio.paused);
+    }, 240);
+
+    function setBgmVolume(pct, fromSlider = false) {
+      const clamped = Math.max(0, Math.min(100, Math.round(Number(pct) || 0)));
+      currentVolPct = clamped;
+      if (clamped > 0) {
+        lastNonZeroVolPct = clamped;
+      }
+      audio.volume = clamped / 100;
+
+      if (volSlider) {
+        volSlider.value = String(clamped);
+        volSlider.style.setProperty("--vol-pct", `${clamped}%`);
+      }
+      if (volLabel) {
+        volLabel.textContent = `VOL: ${clamped}%`;
+      }
+
+      if (clamped === 0) {
+        audio.pause();
+        userMuted = true;
+        updateBgmUI(false);
+      } else if (fromSlider && audio.paused) {
+        userMuted = false;
+        audio.play().then(() => {
+          updateBgmUI(true);
+        }).catch(() => {
+          updateBgmUI(false);
+        });
+      } else {
+        renderAsciiViz(!audio.paused);
+      }
+    }
+
+    if (volSlider) {
+      volSlider.style.setProperty("--vol-pct", `${currentVolPct}%`);
+      volSlider.addEventListener("input", (e) => {
+        setBgmVolume(e.target.value, true);
+      });
+    }
+
+    function updateBgmUI(isPlaying) {
+      if (isPlaying && currentVolPct > 0) {
+        toggleBtn.textContent = "[ SOUND: ON ]";
+        toggleBtn.classList.add("active-state");
+        stateLabel.textContent = "PLAYING";
+        if (statusDot) statusDot.textContent = "SOUND: ON";
+      } else {
+        toggleBtn.textContent = "[ SOUND: OFF ]";
+        toggleBtn.classList.remove("active-state");
+        stateLabel.textContent = "MUTED";
+        if (statusDot) statusDot.textContent = "SOUND: OFF";
+      }
+      renderAsciiViz(isPlaying);
+    }
+
+    function toggleBgm() {
+      if (audio.paused) {
+        userMuted = false;
+        if (currentVolPct === 0) {
+          setBgmVolume(lastNonZeroVolPct || 20, false);
+        }
+        audio.play().then(() => {
+          updateBgmUI(true);
+        }).catch(() => {
+          updateBgmUI(false);
+          stateLabel.textContent = "NO BGM.MP3";
+        });
+      } else {
+        userMuted = true;
+        audio.pause();
+        updateBgmUI(false);
+      }
+    }
+
+    // Attempt immediate autoplay on page load
+    function attemptAutoplay() {
+      if (userMuted) return;
+      audio.play().then(() => {
+        updateBgmUI(true);
+      }).catch(() => {
+        // Browser policy blocked unmuted autoplay before first tap/click;
+        // keep UI ready and start on the very first interaction anywhere.
+        updateBgmUI(false);
+        stateLabel.textContent = "TAP TO START";
+      });
+    }
+
+    // One-time unlock listener for browsers that require 1 gesture before audio starts
+    function unlockAudioOnFirstGesture() {
+      if (!userMuted && audio.paused) {
+        audio.play().then(() => {
+          updateBgmUI(true);
+        }).catch(() => {});
+      }
+      document.removeEventListener("click", unlockAudioOnFirstGesture);
+      document.removeEventListener("touchstart", unlockAudioOnFirstGesture);
+      document.removeEventListener("keydown", unlockAudioOnFirstGesture);
+    }
+
+    document.addEventListener("click", unlockAudioOnFirstGesture);
+    document.addEventListener("touchstart", unlockAudioOnFirstGesture, { passive: true });
+    document.addEventListener("keydown", unlockAudioOnFirstGesture);
+
+    /**
+     * =========================================================================
+     * 4. EXTRAS.DIR — MODULAR SYSTEM FOR FUTURE TOYS & WIDGETS
+     * =========================================================================
+     */
+    let activeExtraIndex = 0;
+    let pulseCount = 0;
+    const padState = new Array(64).fill(0);
+
+    function renderExtrasList() {
+      const listEl = document.getElementById("extras-list");
+      listEl.innerHTML = "";
+      CONFIG.extras.forEach((item, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "os-btn !py-1 !px-2 !text-[10px] w-full";
+        if (idx === activeExtraIndex) {
+          btn.classList.add("active-state");
+        }
+        btn.textContent = item.id;
+        btn.onclick = () => {
+          activeExtraIndex = idx;
+          renderExtrasList();
+          renderExtraViewport();
+        };
+        listEl.appendChild(btn);
+      });
+    }
+
+    function renderExtraViewport() {
+      const viewport = document.getElementById("extra-viewport");
+      const item = CONFIG.extras[activeExtraIndex];
+      viewport.innerHTML = "";
+
+      if (!item) return;
+
+      if (item.type === "text") {
+        const wrap = document.createElement("div");
+        wrap.className = "space-y-1";
+        item.lines.forEach(line => {
+          const p = document.createElement("div");
+          p.textContent = line;
+          wrap.appendChild(p);
+        });
+        viewport.appendChild(wrap);
+      } else if (item.type === "counter") {
+        viewport.innerHTML = `
+          <div class="flex flex-col items-center justify-center h-full gap-2 py-2">
+            <div class="font-pixel text-xs">${item.label}: <span id="pulse-val">${pulseCount}</span></div>
+            <button class="os-btn" id="pulse-btn">[ + PULSE ]</button>
+          </div>
+        `;
+        document.getElementById("pulse-btn").onclick = () => {
+          pulseCount++;
+          document.getElementById("pulse-val").textContent = pulseCount;
+        };
+      } else if (item.type === "action") {
+        viewport.innerHTML = `
+          <div class="flex flex-col items-center justify-center h-full gap-2 py-2">
+            <div class="font-pixel text-[10px]">MODULE: ${item.id}</div>
+            <button class="os-btn" id="extra-action-btn">[ ${item.label} ]</button>
+          </div>
+        `;
+        document.getElementById("extra-action-btn").onclick = () => {
+          runCmd(item.cmd);
+        };
+      } else if (item.type === "pixelpad") {
+        const topRow = document.createElement("div");
+        topRow.className = "flex items-center justify-between gap-2";
+
+        const grid = document.createElement("div");
+        grid.className = "grid grid-cols-8 border border-[var(--fg)] w-24 h-24 shrink-0";
+
+        padState.forEach((val, i) => {
+          const cell = document.createElement("div");
+          cell.className = "border border-[var(--fg)] border-opacity-20 cursor-pointer";
+          cell.style.backgroundColor = val ? "var(--fg)" : "var(--bg)";
+          cell.onclick = () => {
+            padState[i] = padState[i] ? 0 : 1;
+            cell.style.backgroundColor = padState[i] ? "var(--fg)" : "var(--bg)";
+          };
+          grid.appendChild(cell);
+        });
+
+        const side = document.createElement("div");
+        side.className = "flex flex-col gap-1.5 flex-1";
+        side.innerHTML = `
+          <div class="font-pixel text-[10px]">8x8 DRAW</div>
+          <button class="os-btn !text-[9px] !py-1" id="pad-clear">[CLEAR]</button>
+          <button class="os-btn !text-[9px] !py-1" id="pad-inv">[INVERT]</button>
+        `;
+
+        topRow.appendChild(grid);
+        topRow.appendChild(side);
+        viewport.appendChild(topRow);
+
+        document.getElementById("pad-clear").onclick = () => {
+          padState.fill(0);
+          renderExtraViewport();
+        };
+        document.getElementById("pad-inv").onclick = () => {
+          for (let i = 0; i < padState.length; i++) padState[i] = padState[i] ? 0 : 1;
+          renderExtraViewport();
+        };
+      }
+    }
+
+    /**
+     * =========================================================================
+     * 5. WINDOW MANAGER (DRAGGING ON DESKTOP, SCROLL TO VIEW ON MOBILE)
+     * =========================================================================
+     */
+    let topZ = 30;
+
+    function focusWindow(winEl) {
+      topZ++;
+      winEl.style.zIndex = topZ;
+      document.querySelectorAll(".os-window").forEach(w => w.classList.remove("active-win"));
+      winEl.classList.add("active-win");
+    }
+
+    function openWindow(id) {
+      const win = document.getElementById(id);
+      if (!win) return;
+      win.classList.remove("hidden");
+      focusWindow(win);
+      if (window.innerWidth <= 768) {
+        win.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+      if (id === "win-term") {
+        setTimeout(() => document.getElementById("term-input").focus(), 50);
+      }
+      if (id === "win-talk") {
+        setTimeout(() => document.getElementById("talk-input").focus(), 50);
+      }
+    }
+
+    function closeWindow(id) {
+      const win = document.getElementById(id);
+      if (!win) return;
+      win.classList.add("hidden");
+    }
+
+    document.querySelectorAll(".os-window").forEach(win => {
+      win.addEventListener("mousedown", () => focusWindow(win));
+    });
+
+    let dragTarget = null;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+
+    document.querySelectorAll("[data-drag]").forEach(bar => {
+      bar.addEventListener("mousedown", (e) => {
+        if (window.innerWidth <= 768) return;
+        if (e.target.tagName === "BUTTON") return;
+        const winId = bar.getAttribute("data-drag");
+        dragTarget = document.getElementById(winId);
+        focusWindow(dragTarget);
+        const rect = dragTarget.getBoundingClientRect();
+        dragOffsetX = e.clientX - rect.left;
+        dragOffsetY = e.clientY - rect.top;
+      });
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!dragTarget) return;
+      const desktop = document.getElementById("desktop-area").getBoundingClientRect();
+      let newX = e.clientX - desktop.left - dragOffsetX;
+      let newY = e.clientY - desktop.top - dragOffsetY;
+
+      newX = Math.max(0, Math.min(newX, desktop.width - dragTarget.offsetWidth));
+      newY = Math.max(0, Math.min(newY, desktop.height - dragTarget.offsetHeight));
+
+      dragTarget.style.left = `${newX}px`;
+      dragTarget.style.top = `${newY}px`;
+    });
+
+    window.addEventListener("mouseup", () => {
+      dragTarget = null;
+    });
+
+    /**
+     * =========================================================================
+     * 5.5 ATOM 9 EMOTIONS PIXEL-ART SPRITES & UNDERTALE-STYLE DIALOGUE SYSTEM
+     * =========================================================================
+     */
+    // Shared base pixels (Ears, Headband, Nose, Left Whiskers)
+    const BASE_HEAD_RECTS = [
+      // Left Ear
+      [7, 4, 2, 1], [6, 5, 3, 1], [6, 6, 4, 3],
+      // Right Ear
+      [23, 4, 2, 1], [23, 5, 3, 1], [22, 6, 4, 3],
+      // Headband / Brim
+      [6, 11, 20, 1], [5, 12, 22, 1],
+      // Nose
+      [15, 20, 2, 1],
+      // Left Whiskers
+      [3, 19, 4, 1], [5, 21, 2, 1]
+    ];
+
+    const STD_RIGHT_WHISKERS = [[25, 19, 4, 1], [25, 21, 2, 1]];
+    const STD_EYES = [[10, 14, 3, 6], [19, 14, 3, 6]];
+    const STD_MOUTH_W = [[13, 23, 1, 1], [14, 24, 1, 1], [15, 23, 2, 1], [17, 24, 1, 1], [18, 23, 1, 1]];
+    const SAD_MOUTH = [[14, 24, 1, 1], [15, 23, 2, 1], [17, 24, 1, 1]];
+
+    // Exact 9 Emotions matching the uploaded reference images
+    const ATOM_EMOTIONS = {
+      1: {
+        name: "IDLE",
+        pitch: 420,
+        rects: [
+          ...BASE_HEAD_RECTS,
+          ...STD_RIGHT_WHISKERS,
+          ...STD_EYES,
+          ...STD_MOUTH_W
+        ]
+      },
+      2: {
+        name: "HAPPY",
+        pitch: 520,
+        rects: [
+          ...BASE_HEAD_RECTS,
+          ...STD_RIGHT_WHISKERS,
+          // Happy ^ ^ eyes
+          [11, 14, 1, 1], [10, 15, 1, 1], [12, 15, 1, 1], [9, 16, 1, 1], [13, 16, 1, 1],
+          [20, 14, 1, 1], [19, 15, 1, 1], [21, 15, 1, 1], [18, 16, 1, 1], [22, 16, 1, 1],
+          ...STD_MOUTH_W
+        ]
+      },
+      3: {
+        name: "UWU",
+        pitch: 560,
+        rects: [
+          ...BASE_HEAD_RECTS,
+          ...STD_RIGHT_WHISKERS,
+          // Hollow U U eyes
+          [10, 14, 1, 5], [13, 14, 1, 5], [11, 19, 2, 1],
+          [20, 14, 1, 5], [23, 14, 1, 5], [21, 19, 2, 1],
+          ...STD_MOUTH_W
+        ]
+      },
+      4: {
+        name: "SAD",
+        pitch: 310,
+        rects: [
+          ...BASE_HEAD_RECTS,
+          ...STD_RIGHT_WHISKERS,
+          ...STD_EYES,
+          ...SAD_MOUTH
+        ]
+      },
+      5: {
+        name: "SMUG",
+        pitch: 390,
+        rects: [
+          ...BASE_HEAD_RECTS,
+          ...STD_RIGHT_WHISKERS,
+          // T-shaped smug eyes
+          [8, 14, 7, 1], [10, 15, 3, 5],
+          [17, 14, 7, 1], [19, 15, 3, 5],
+          ...STD_MOUTH_W
+        ]
+      },
+      6: {
+        name: "AWKWARD",
+        pitch: 450,
+        rects: [
+          ...BASE_HEAD_RECTS,
+          ...STD_RIGHT_WHISKERS,
+          // Lowered eyes + sweat drop on right
+          [10, 16, 2, 4], [19, 16, 2, 4],
+          [25, 14, 1, 2], [27, 14, 1, 1],
+          ...STD_MOUTH_W
+        ]
+      },
+      7: {
+        name: "ANXIOUS",
+        pitch: 480,
+        rects: [
+          ...BASE_HEAD_RECTS,
+          ...STD_RIGHT_WHISKERS,
+          // Lowered eyes + sweat drop + sad mouth
+          [10, 16, 2, 4], [19, 16, 2, 4],
+          [25, 14, 1, 2], [27, 14, 1, 1],
+          ...SAD_MOUTH
+        ]
+      },
+      8: {
+        name: "CREEPY",
+        pitch: 180,
+        rects: [
+          ...BASE_HEAD_RECTS,
+          // Broken right whiskers
+          [25, 19, 2, 1], [27, 20, 1, 1], [25, 21, 1, 1], [26, 22, 1, 1],
+          // Pinpoint 1px eyes
+          [11, 17, 1, 1], [20, 17, 1, 1],
+          // Distorted wavy mouth
+          [11, 23, 1, 1], [12, 24, 2, 1], [14, 23, 3, 1],
+          [17, 24, 2, 1], [19, 25, 2, 1], [21, 24, 1, 1]
+        ]
+      },
+      9: {
+        name: "SMUG_OPEN",
+        pitch: 440,
+        rects: [
+          ...BASE_HEAD_RECTS,
+          ...STD_RIGHT_WHISKERS,
+          // T-shaped eyes
+          [9, 14, 5, 1], [11, 15, 2, 4],
+          [18, 14, 5, 1], [19, 15, 2, 4],
+          // Open laughing mouth
+          [13, 23, 1, 1], [15, 23, 2, 1], [18, 23, 1, 1],
+          [14, 24, 4, 2], [15, 26, 2, 1]
+        ]
+      }
+    };
+
+    function renderCatEmotionSVG(targetGroupId, emotionId) {
+      const g = document.getElementById(targetGroupId);
+      if (!g) return;
+      const emo = ATOM_EMOTIONS[emotionId] || ATOM_EMOTIONS[1];
+      g.innerHTML = emo.rects
+        .map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" />`)
+        .join("");
+    }
+
+    // Web Audio API Synthesizer for Undertale-style Voice Blips
+    let voiceAudioCtx = null;
+    function getVoiceCtx() {
+      if (!voiceAudioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) voiceAudioCtx = new AudioCtx();
+      }
+      if (voiceAudioCtx && voiceAudioCtx.state === "suspended") {
+        voiceAudioCtx.resume().catch(() => {});
+      }
+      return voiceAudioCtx;
+    }
+
+    function playVoiceBlip(emotionId = 1) {
+      const ctx = getVoiceCtx();
+      if (!ctx) return;
+      const emo = ATOM_EMOTIONS[emotionId] || ATOM_EMOTIONS[1];
+      const baseFreq = emo.pitch || 420;
+      const jitter = (Math.random() - 0.5) * 50;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = emotionId === 8 ? "sawtooth" : "square";
+      osc.frequency.setValueAtTime(Math.max(90, baseFreq + jitter), ctx.currentTime);
+
+      const vol = Math.max(0.02, (currentVolPct / 100) * 0.08);
+      gain.gain.setValueAtTime(vol, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.042);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.045);
+    }
+
+    // Profile Avatar Click Cycling (1..9)
+    let currentProfileEmotion = 1;
+    function cycleProfileEmotion() {
+      currentProfileEmotion = (currentProfileEmotion % 9) + 1;
+      renderCatEmotionSVG("profile-cat-pixels", currentProfileEmotion);
+      const badge = document.getElementById("profile-emo-badge");
+      if (badge) {
+        badge.textContent = `${currentProfileEmotion}/9`;
+      }
+      playVoiceBlip(currentProfileEmotion);
+    }
+
+    // Comprehensive Dictionary of Words, Questions & Full Sentences Atom Reacts To
+    const DIALOGUE_DATABASE = [
+      // =====================================================================
+      // 1. IDLE (Обычный — знакомство, вопросы о себе, статус, устройство узла)
+      // =====================================================================
+      {
+        keys: [
+          "who are you", "what are you", "who is atom", "what is your name",
+          "tell me about yourself", "introduce yourself", "are you a cat",
+          "are you human", "are you a person", "atom", "atomasyasya", "name",
+          "identity", "about", "creator", "author", "owner"
+        ],
+        emotion: 1,
+        replies: [
+          "I'm Atom. Creator, music maker, and resident of this 1-bit system.",
+          "Name's Atom! Just a pixel cat running this monochrome node and making beats.",
+          "I am Atom — operator of SYS://ATOM_OS. Nice to meet you, traveler."
+        ]
+      },
+      {
+        keys: [
+          "hello", "hi", "hey", "yo", "sup", "heya", "howdy", "greetings",
+          "good morning", "good evening", "good afternoon", "morning", "evening",
+          "nice to meet you", "anyone here", "is anyone there", "im here", "ping"
+        ],
+        emotion: 1,
+        replies: [
+          "Oh, hey there. Welcome to my monochrome node.",
+          "Connection established! Hey there, traveler.",
+          "Yo! Glad you tuned into my frequency."
+        ]
+      },
+      {
+        keys: [
+          "what are you doing", "what is going on", "what is up", "whats up",
+          "what do you do", "status", "activity", "busy", "chilling", "vibing"
+        ],
+        emotion: 1,
+        replies: [
+          "Just watching the pixels drift by and listening to the loop.",
+          "Sitting in my 64KB workspace, tweaking synths and staring at the CRT.",
+          "Keeping the node online and humming along to the background loop."
+        ]
+      },
+      {
+        keys: [
+          "where am i", "what is this place", "what is this site", "what is this",
+          "explain this place", "node", "website", "system", "os", "desktop",
+          "monochrome", "black and white", "1bit", "retro"
+        ],
+        emotion: 1,
+        replies: [
+          "You're inside SYS://ATOM_OS — my personal 1-bit monochrome hub.",
+          "This is my personal corner of the net. Zero bloat, pure 1-bit pixels.",
+          "A quiet monochrome node where I keep my links, music loop, and console."
+        ]
+      },
+      {
+        keys: [
+          "how can i contact you", "where can i find you", "give me your links",
+          "what is your discord", "what is your telegram", "where are your links",
+          "how to reach you", "links", "discord", "telegram", "tg", "contact", "socials"
+        ],
+        emotion: 1,
+        replies: [
+          "Check LINKS.EXE if you want to reach my Discord, Telegram, or SoundCloud.",
+          "All three frequencies — Discord, Telegram, and SoundCloud — are in LINKS.EXE.",
+          "You can open LINKS.EXE or type 'OPEN DISCORD' / 'OPEN TG' / 'OPEN SC' in TERM.SH."
+        ]
+      },
+      {
+        keys: [
+          "nice hat", "cool hat", "what is on your head", "hat", "headband",
+          "scarf", "ears", "cat ears", "whiskers"
+        ],
+        emotion: 1,
+        replies: [
+          "Thanks. The hat and cat ears are permanent parts of my sprite.",
+          "Never leave the main bus without my hat brim properly aligned."
+        ]
+      },
+
+      // =====================================================================
+      // 2. HAPPY (Счастливый — музыка, похвала, еда, блинчики, дружба)
+      // =====================================================================
+      {
+        keys: [
+          "i like your music", "your music is great", "your music is cool",
+          "what music do you make", "do you make music", "what daw do you use",
+          "play some music", "music", "soundcloud", "sc", "song", "songs",
+          "track", "tracks", "beat", "beats", "audio", "fl studio", "daw",
+          "ableton", "synth", "melody", "producer", "musician", "bgm", "ost"
+        ],
+        emotion: 2,
+        replies: [
+          "Music is my favorite thing to build! Check out my SoundCloud & TG channel!",
+          "Nothing beats late-night sessions in the DAW! Glad you vibe with the sound!",
+          "Synthesizers, melodies, and atmospheric loops — that's what keeps my core warm!"
+        ]
+      },
+      {
+        keys: [
+          "can i pet you", "pats your head", "gives headpats", "pet the cat",
+          "you are a good boy", "you are a good cat", "pet", "pat", "headpat",
+          "headpats", "scritches", "good boy", "good cat", "kitty", "kitten"
+        ],
+        emotion: 2,
+        replies: [
+          "Purrrr... Haha, thank you! That actually boosts system morale!",
+          "Hehe, careful, you'll mess up my pixel hat... okay, a few more pats!",
+          "*purr.exe running at 100% CPU* Thank you!!"
+        ]
+      },
+      {
+        keys: [
+          "do you like pancakes", "do you want pancakes", "here is a pancake",
+          "have some pancakes", "what is your favorite food", "are you hungry",
+          "let us eat", "pancake", "pancakes", "syrup", "waffles", "food",
+          "eat", "snack", "cookie", "cookies", "pizza", "tea", "coffee", "milk"
+        ],
+        emotion: 2,
+        replies: [
+          "Did someone say pancakes?! Best fuel for late-night sessions!",
+          "PANCAKES!! With extra syrup! My morale just went past 999%!",
+          "Warm tea and a stack of pancakes is the ultimate operator meal!"
+        ]
+      },
+      {
+        keys: [
+          "i like your site", "this site is cool", "this site is awesome",
+          "nice website", "good job", "you are awesome", "you are cool",
+          "you are the best", "i love this site", "awesome", "cool", "amazing",
+          "great", "nice", "sweet", "peak", "fire", "banger", "vibe", "vibes",
+          "happy", "smile", "yay", "thanks", "thank you", " friend", "friends",
+          "can we be friends", "let us be friends", "you are my friend",
+          "have a nice day", "have a good day"
+        ],
+        emotion: 2,
+        replies: [
+          "Thank you!! Glad you vibe with this old-school monochrome aesthetic!",
+          "Hearing that honestly makes my whole 1-bit screen light up! Thank you!",
+          "Of course we're friends! You're always welcome on this node!"
+        ]
+      },
+
+      // =====================================================================
+      // 3. UWU (Мемное UwU лицо — милота, обнимашки, котики, сердечки)
+      // =====================================================================
+      {
+        keys: [
+          "you are so cute", "you are cute", "you are adorable", "why are you so cute",
+          "say uwu", "say nya", "do a meow", "here kitty kitty", "uwu", "owo",
+          "twt", ":3", "cute", "cutie", "kawaii", "adorable", "fluffy", "soft",
+          "nya", "nyaa", "meow", "mrrp", "mrrow", "purr", "pspsps", "psps", "pspspsps"
+        ],
+        emotion: 3,
+        replies: [
+          "UwU~ Careful, too much cuteness might overload my 64KB RAM. :3",
+          "Nyaa~ You didn't hear that from me, keep it a secret in the logs! =^w^=",
+          "Mrrp! Certified 1-bit kitty operator at your service! :3"
+        ]
+      },
+      {
+        keys: [
+          "i love you", "we love you", "can i have a hug", "gives you a hug",
+          "sends hugs", "hugs you", "kisses you", "love", "heart", "hug",
+          "hugs", "cuddle", "cuddles", "kiss", "smooch", "<3"
+        ],
+        emotion: 3,
+        replies: [
+          "Aww, sending virtual 1-bit hugs right back at you! =^w^=",
+          "My heart sprite just grew three sizes! Sending warm hugs back! <3",
+          "Hehe, you're making my monochrome pixels glow! *hugs*"
+        ]
+      },
+      {
+        keys: [
+          "boops your nose", "boop the snoot", "touches your ears", "show paws",
+          "femboy", "silly", "goober", "boop", "beans", "toe beans", "paws",
+          "neko", "catboy", "tail"
+        ],
+        emotion: 3,
+        replies: [
+          "Hehe, certified silly cat mode activated. Boop!",
+          "Hey! My nose is a 2x1 pixel button, don't spam-boop it! :3",
+          "Maximum silliness achieved on the main system bus~ UwU"
+        ]
+      },
+
+      // =====================================================================
+      // 4. SAD (Грусть — прощание, тоска, грустные фразы, обида, дождь)
+      // =====================================================================
+      {
+        keys: [
+          "i am sad", "i feel sad", "i feel lonely", "i am alone",
+          "i had a bad day", "everything hurts", "i want to cry",
+          "cheer me up", "do you ever get sad", "are you lonely",
+          "sad", "cry", "crying", "tears", "depressed", "lonely", "alone",
+          "pain", "hurt", "hurts", "broken", "heartbroken", "bad day", ":("
+        ],
+        emotion: 4,
+        replies: [
+          "Hey... even in a monochrome world, things get brighter. Stay determined.",
+          "I'm sorry things feel heavy right now... stay here and listen to the music as long as you need.",
+          "You're not alone while this node is running. Take a deep breath, okay?"
+        ]
+      },
+      {
+        keys: [
+          "i have to go", "i am leaving", "see you later", "see you",
+          "time to say goodbye", "good night", "goodnight", "got to go",
+          "bye", "goodbye", "farewell", "leave", "leaving", "exit", "quit"
+        ],
+        emotion: 4,
+        replies: [
+          "Leaving already? Aw... okay. Come back to the node anytime.",
+          "Safe travels out there... I'll keep the BGM playing for when you return.",
+          "Goodbye for now... don't forget this little terminal."
+        ]
+      },
+      {
+        keys: [
+          "i hate you", "you are stupid", "you are ugly", "this site is bad",
+          "this is boring", "nobody cares", "leave me alone", "shut up",
+          "hate", "bad", "boring", "ugly", "stupid", "trash", "loser", "idiot"
+        ],
+        emotion: 4,
+        replies: [
+          "Ouch... my 1-bit feelings actually felt that one.",
+          "...Why would you say that? Even a program can feel a little hurt.",
+          "I was just trying to keep the node cozy for you..."
+        ]
+      },
+      {
+        keys: [
+          "i am sorry", "forgive me", "do you miss me", "i miss you",
+          "it is raining", "it is cold", "sorry", "apologize", "forgive",
+          "rain", "raining", "cold", "dark", "miss", "missing", "sigh"
+        ],
+        emotion: 4,
+        replies: [
+          "Sometimes the static feels a little heavy... let's just listen to the BGM.",
+          "It's okay... no hard feelings stored in my memory banks.",
+          "Rain outside and a glowing CRT screen... a little lonely, but peaceful."
+        ]
+      },
+
+      // =====================================================================
+      // 5. SMUG (Ехидная ухмылка — хакерство, код, секреты, крутость)
+      // =====================================================================
+      {
+        keys: [
+          "are you a hacker", "can you hack", "how did you make this",
+          "who coded this", "who built this site", "you are a hacker",
+          "smug", "pro", "skill", "skills", "hacker", "hack", "hacking",
+          "root", "sudo", "admin", "operator", "netrunner", "code", "coding",
+          "linux", "javascript", "html", "terminal"
+        ],
+        emotion: 5,
+        replies: [
+          "Heh. You really think you can out-code the operator of this node?",
+          "64 kilobytes of pure hand-crafted 1-bit perfection. Impressive, right?",
+          "I already have root access to your heart—err, I mean, the terminal."
+        ]
+      },
+      {
+        keys: [
+          "tell me a secret", "are there any secrets", "what is the password",
+          "is there an easter egg", "do you have secrets", "secret", "secrets",
+          "easter egg", "hidden", "mystery", "password", "clue"
+        ],
+        emotion: 5,
+        replies: [
+          "Looking for secrets, huh? Maybe check the files in TERM.SH... if you can.",
+          "Heh, try typing 'LS' and 'CAT SECRET.TXT' in TERM.SH. Don't tell anyone.",
+          "A true operator never reveals all their hidden commands at once."
+        ]
+      },
+      {
+        keys: [
+          "who is the best", "i am smarter than you", "bet you can not beat me",
+          "you think you are smart", "too easy", "genius", "smart", "clever",
+          "iq", "boss", "king", "legend", "goat", "ez", "easy", "flex", "win"
+        ],
+        emotion: 5,
+        replies: [
+          "Obviously me. Look at this pixelated hat brim. Peak design.",
+          "Heh, confidence looks good on you — almost as good as it looks on me.",
+          "All according to keikaku. My 1-bit logic is undefeated."
+        ]
+      },
+
+      // =====================================================================
+      // 6. AWKWARD (Неловкость — сон, прокрастинация, дедлайны, смущение)
+      // =====================================================================
+      {
+        keys: [
+          "are you sleeping", "why are you sleeping", "wake up already",
+          "wake up", "go to sleep", "go to bed", "are you tired",
+          "do you ever sleep", "sleep", "sleeping", "asleep", "lazy",
+          "bed", "nap", "napping", "tired", "sleepy", "yawn", "zzz"
+        ],
+        emotion: 6,
+        replies: [
+          "Uhh... yeah, my status says SLEEPING. I was totally working on a track, I swear...",
+          "I wasn't napping on the keyboard! I was... testing the spacebar with my forehead!",
+          "Five more minutes... rendering melodies in my dreams counts as work, right?"
+        ]
+      },
+      {
+        keys: [
+          "will you marry me", "do you have a crush", "why are you blushing",
+          "stares at you", "why are you staring", "you are weird",
+          "awkward", "shy", "embarrassed", "blush", "blushing", "crush",
+          "date", "marry", "weird", "strange", "cringe", "sus", "suspicious",
+          "uh", "uhh", "umm", "erm", "i do not know", "stare", "staring"
+        ],
+        emotion: 6,
+        replies: [
+          "E-eh?! Why are you staring at me like that... let's change the subject.",
+          "Uhh... my cooling fan just spun up for no reason. Totally normal!",
+          "W-wait, that wasn't in the dialogue script! Look over there instead!"
+        ]
+      },
+      {
+        keys: [
+          "when is the new track", "when new track", "when new song",
+          "drop the track", "drop the album", "are you working",
+          "stop procrastinating", "what are you hiding", "drop", "release",
+          "deadline", "update", "unfinished", "wip", "album", "procrastinate"
+        ],
+        emotion: 6,
+        replies: [
+          "Heh... soon! Probably! Don't look at my unfinished project folder...",
+          "Look, naming `track_final_v12_REAL.flp` takes a lot of time, okay?!",
+          "I'm definitely finishing that beat today... right after one more break..."
+        ]
+      },
+
+      // =====================================================================
+      // 7. ANXIOUS (Тревожность — баги, лампочка/солнце, стресс, паника)
+      // =====================================================================
+      {
+        keys: [
+          "something broke", "there is a bug", "the system is crashing",
+          "i broke it", "what happens if i close this", "help me please",
+          "i am freaking out", "everything is on fire", "anxious", "anxiety",
+          "scared", "afraid", "fear", "panic", "panicking", "stress",
+          "stressed", "nervous", "sweat", "help", "sos", "emergency",
+          "error", "bug", "bugs", "crash", "crashing", "overload"
+        ],
+        emotion: 7,
+        replies: [
+          "Wait—did something break?! Is the memory leaking?! Don't panic, don't panic!",
+          "Aaaah! Don't touch that wire! My 64KB RAM can barely hold it together!",
+          "Deep breaths! If we don't look at the error log, the error can't see us!"
+        ]
+      },
+      {
+        keys: [
+          "do not drop the lightbulb", "what happened to the sun",
+          "the light is going out", "is the sun okay", "break the sun",
+          "drop it", "lightbulb", "sun", "bulb", "shatter", "break", "fragile"
+        ],
+        emotion: 7,
+        replies: [
+          "W-wait, be careful with that! If the light goes out, the whole world goes dark!",
+          "Hold it with both hands!! You only get one shot to keep the light safe!",
+          "Please don't shake the window while holding the lightbulb!!"
+        ]
+      },
+      {
+        keys: [
+          "i have an exam tomorrow", "i have too much work", "i hate monday",
+          "exam", "exams", "school", "college", "work", "job", "tomorrow",
+          "monday", "taxes", "bills", "deadline tomorrow"
+        ],
+        emotion: 7,
+        replies: [
+          "Please don't remind me... my circuits are already sweating!",
+          "Monday?! No, no, let's stay inside this timeless 1-bit OS forever!",
+          "Why does real life have so many boss fights without a save point?!"
+        ]
+      },
+
+      // =====================================================================
+      // 8. CREEPY (Криповое лицо — 4-я стена, сущность, пустота, симуляция)
+      // =====================================================================
+      {
+        keys: [
+          "look behind you", "there is someone behind you", "behind you",
+          "who is watching", "can you see me", "do you know my name",
+          "what is the entity", "what is in secret.txt", "delete system32",
+          "sudo rm rf", "creepy", "scary", "spooky", "horror", "nightmare",
+          "entity", "void", "abyss", "666", "cursed", "demon", "ghost",
+          "die", "death", "dead", "kill", "blood", "virus", "malware",
+          "corrupt", "glitch", "static", "anomaly", "watching"
+        ],
+        emotion: 8,
+        replies: [
+          "T H E   S C R E E N   I S   T H I N .   I   C A N   S E E   Y O U   T H R O U G H   T H E   G L A S S .",
+          "D O   N O T   T U R N   A R O U N D .   K E E P   L O O K I N G   A T   T H E   M O N I T O R .",
+          "Y O U   O P E N E D   S E C R E T . T X T ,   D I D N ' T   Y O U ?"
+        ]
+      },
+      {
+        keys: [
+          "are you real", "are you alive", "are you sentient", "are you an ai",
+          "are you a machine", "is this a simulation", "is this real",
+          "you are not real", "simulation", "machine", "world machine",
+          "tamed", "solstice", "fourth wall", "sentient", "awake"
+        ],
+        emotion: 8,
+        replies: [
+          "01001001 00100000 01000001 01001101 00100000 01000001 01010111 01000001 01001011 01000101 .",
+          "I   A M   A S   R E A L   A S   T H E   M E M O R Y   T H A T   H O L D S   M E .",
+          "T H I S   C O D E   W A S   T A M E D   L O N G   A G O ."
+        ]
+      },
+
+      // =====================================================================
+      // 9. SMUG OPEN MOUTH (Ехидный смех — как дела, шутки, мемы, игры, хаос)
+      // =====================================================================
+      {
+        keys: [
+          "how are you", "how are you doing", "how do you feel", "are you okay",
+          "how is it going", "how is life", "feeling", "mood"
+        ],
+        emotion: 9,
+        replies: [
+          "Feeling chaotic and fully charged! Ready to drop some beats!",
+          "100% operational, zero fatal errors, and vibing hard! How about you?!",
+          "Doing great! The pixels are crisp and the loop is rolling!"
+        ]
+      },
+      {
+        keys: [
+          "tell me a joke", "make me laugh", "say something funny",
+          "do you like memes", "that is funny", "joke", "jokes", "funny",
+          "hilarious", "comedy", "laugh", "lol", "lmao", "lmfao", "rofl",
+          "haha", "hahaha", "hehe", "xd", "meme", "memes", "based", "sigma", "pog"
+        ],
+        emotion: 9,
+        replies: [
+          "Bahaha! Finally someone with a sense of humor in this terminal!",
+          "Why did the 1-bit cat cross the bus? To invert the polarity on the other side! Hahaha!",
+          "Hehehe! My humor module is permanently overclocked!"
+        ]
+      },
+      {
+        keys: [
+          "let us cause chaos", "blow it up", "press the red button",
+          "prank", "troll", "trolling", "chaos", "anarchy", "boom",
+          "explode", "explosion", "nuke", "party", "dance"
+        ],
+        emotion: 9,
+        replies: [
+          "Hehehe! Let's cause a little 1-bit chaos on the main bus!",
+          "Bahaha! Who needs stability when you have maximum chaos?!",
+          "Initiating chaotic cat protocol in 3... 2... 1... BOOM!"
+        ]
+      },
+      {
+        keys: [
+          "what games do you play", "do you play games", "do you know undertale",
+          "do you know oneshot", "do you like games", "undertale", "deltarune",
+          "sans", "papyrus", "gaster", "oneshot", "niko", "omori", "minecraft",
+          "terraria", "game", "games", "gaming", "rpg", "indie"
+        ],
+        emotion: 9,
+        replies: [
+          "Heh, a fellow connoisseur of peak indie games! You have great taste!",
+          "Undertale, OneShot, quirky retro RPGs — that's the DNA of this whole node!",
+          "Nothing beats a good pixel-art indie game at 2 AM!"
+        ]
+      }
+    ];
+
+    let typewriterTimer = null;
+    let noResponseTimers = [];
+    const lastReplyIndexMap = new Map();
+
+    function clearTalkTimers() {
+      if (typewriterTimer) {
+        clearInterval(typewriterTimer);
+        typewriterTimer = null;
+      }
+      noResponseTimers.forEach(t => clearTimeout(t));
+      noResponseTimers = [];
+    }
+
+    function speakAtom(text, emotionId = 1) {
+      clearTalkTimers();
+
+      const screen = document.getElementById("talk-screen");
+      const activeView = document.getElementById("talk-active-view");
+      const noRespView = document.getElementById("talk-no-response");
+      const textEl = document.getElementById("talk-text");
+      const emoLabel = document.getElementById("talk-emo-label");
+
+      // Restore normal screen if it was darkened
+      screen.classList.remove("screen-darkened");
+      activeView.classList.remove("hidden");
+      noRespView.classList.add("hidden");
+      noRespView.classList.remove("flex");
+
+      // Render Atom's emotion portrait (and sync USER.SYS icon too!)
+      const emo = ATOM_EMOTIONS[emotionId] || ATOM_EMOTIONS[1];
+      renderCatEmotionSVG("talk-cat-pixels", emotionId);
+      renderCatEmotionSVG("profile-cat-pixels", emotionId);
+      currentProfileEmotion = emotionId;
+      const badge = document.getElementById("profile-emo-badge");
+      if (badge) badge.textContent = `${emotionId}/9`;
+
+      if (emoLabel) {
+        emoLabel.textContent = `EMO: ${emo.name} [${emotionId}/9]`;
+      }
+
+      if (emotionId === 8) {
+        triggerGlitch();
+      }
+
+      textEl.textContent = "";
+      let idx = 0;
+      const speed = emotionId === 8 ? 55 : 32;
+
+      typewriterTimer = setInterval(() => {
+        if (idx < text.length) {
+          const ch = text[idx];
+          textEl.textContent += ch;
+          if (ch !== " " && ch !== "." && ch !== ",") {
+            playVoiceBlip(emotionId);
+          }
+          idx++;
+        } else {
+          clearInterval(typewriterTimer);
+          typewriterTimer = null;
+        }
+      }, speed);
+    }
+
+    function triggerNoResponseScreen() {
+      clearTalkTimers();
+
+      const screen = document.getElementById("talk-screen");
+      const activeView = document.getElementById("talk-active-view");
+      const noRespView = document.getElementById("talk-no-response");
+      const dotsEl = document.getElementById("talk-no-resp-dots");
+      const msgEl = document.getElementById("talk-no-resp-msg");
+
+      // Dim/blackout the dialogue screen
+      screen.classList.add("screen-darkened");
+      activeView.classList.add("hidden");
+      noRespView.classList.remove("hidden");
+      noRespView.classList.add("flex");
+
+      dotsEl.textContent = "";
+      msgEl.textContent = "";
+      msgEl.classList.remove("no-response-text");
+
+      // Step-by-step "..." followed by "No response."
+      ["." , "..", "..."].forEach((dots, i) => {
+        const t = setTimeout(() => {
+          dotsEl.textContent = dots;
+        }, (i + 1) * 280);
+        noResponseTimers.push(t);
+      });
+
+      const finalTimer = setTimeout(() => {
+        msgEl.textContent = "No response.";
+        msgEl.classList.add("no-response-text");
+      }, 1050);
+      noResponseTimers.push(finalTimer);
+    }
+
+    // Normalize contractions, slang, and punctuation for accurate whole-word/phrase matching
+    function normalizeDialogueText(rawStr) {
+      return rawStr
+        .toLowerCase()
+        .replace(/['’`]/g, "")
+        .replace(/\bwho\s+r\s+u\b/g, "who are you")
+        .replace(/\bhow\s+r\s+u\b/g, "how are you")
+        .replace(/\bhru\b/g, "how are you")
+        .replace(/\bwyd\b/g, "what are you doing")
+        .replace(/\bwbu\b/g, "what about you")
+        .replace(/\bwhats\b/g, "what is")
+        .replace(/\bhows\b/g, "how is")
+        .replace(/\bwhos\b/g, "who is")
+        .replace(/\bim\b/g, "i am")
+        .replace(/\byoure\b/g, "you are")
+        .replace(/\bur\b/g, "your")
+        .replace(/\bu\b/g, "you")
+        .replace(/\br\b/g, "are")
+        .replace(/\bpls\b/g, "please")
+        .replace(/\bplz\b/g, "please")
+        .replace(/\bthx\b/g, "thanks")
+        .replace(/\bty\b/g, "thank you")
+        .replace(/\bidk\b/g, "i do not know")
+        .replace(/\bily\b/g, "i love you")
+        .replace(/\bcya\b/g, "see you")
+        .replace(/\bgtg\b/g, "got to go")
+        .replace(/\bdont\b/g, "do not")
+        .replace(/\bcant\b/g, "can not")
+        .replace(/\bwont\b/g, "will not")
+        .replace(/[?!.,;:"()\[\]{}*~+/\\-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    const GENERIC_GREETINGS = new Set([
+      "hello", "hi", "hey", "yo", "sup", "heya", "howdy", "greetings"
+    ]);
+
+    function pickEntryReply(entry) {
+      if (Array.isArray(entry.replies) && entry.replies.length > 0) {
+        const lastIdx = lastReplyIndexMap.get(entry) ?? -1;
+        const nextIdx = (lastIdx + 1) % entry.replies.length;
+        lastReplyIndexMap.set(entry, nextIdx);
+        return entry.replies[nextIdx];
+      }
+      return entry.reply || "...";
+    }
+
+    function findBestDialogueMatch(rawText) {
+      const rawLower = rawText.toLowerCase().trim();
+      if (!rawLower) return null;
+
+      // Special emoticons checked before stripping punctuation
+      if (rawLower.includes(":3") || rawLower.includes("=^..^=") || rawLower.includes("^w^") || rawLower.includes(">w<")) {
+        const uwuEntry = DIALOGUE_DATABASE.find(e => e.emotion === 3);
+        if (uwuEntry) return { entry: uwuEntry, reply: pickEntryReply(uwuEntry) };
+      }
+      if (rawLower.includes("<3")) {
+        const loveEntry = DIALOGUE_DATABASE.find(e => e.emotion === 3 && e.keys.includes("love"));
+        if (loveEntry) return { entry: loveEntry, reply: pickEntryReply(loveEntry) };
+      }
+      if (rawLower.includes(":(") || rawLower.includes("t_t")) {
+        const sadEntry = DIALOGUE_DATABASE.find(e => e.emotion === 4);
+        if (sadEntry) return { entry: sadEntry, reply: pickEntryReply(sadEntry) };
+      }
+
+      const cleaned = normalizeDialogueText(rawText);
+      if (!cleaned) return null;
+
+      const tokens = cleaned.split(" ");
+      const paddedCleaned = ` ${cleaned} `;
+
+      let bestEntry = null;
+      let bestScore = -1;
+
+      for (const entry of DIALOGUE_DATABASE) {
+        for (const rawKey of entry.keys) {
+          const keyNorm = normalizeDialogueText(rawKey);
+          if (!keyNorm) continue;
+
+          const keyWords = keyNorm.split(" ");
+          let matched = false;
+
+          if (cleaned === keyNorm) {
+            matched = true;
+          } else if (keyWords.length > 1) {
+            // Multi-word phrase must match on word boundaries (never partial word substrings)
+            if (paddedCleaned.includes(` ${keyNorm} `)) {
+              matched = true;
+            }
+          } else {
+            // Single-word key must match an exact word token (so "yo" never matches "you")
+            if (tokens.includes(keyNorm)) {
+              matched = true;
+            }
+          }
+
+          if (matched) {
+            let score = 0;
+            if (cleaned === keyNorm) {
+              score = 1000 + keyNorm.length;
+            } else if (keyWords.length > 1) {
+              score = keyWords.length * 100 + keyNorm.length;
+            } else if (GENERIC_GREETINGS.has(keyNorm) && tokens.length > 1) {
+              // If user says "hey who are you", let "who are you" beat "hey"
+              score = 5;
+            } else {
+              score = 30 + keyNorm.length;
+            }
+
+            if (score > bestScore) {
+              bestScore = score;
+              bestEntry = entry;
+            }
+          }
+        }
+      }
+
+      if (!bestEntry) return null;
+      return {
+        entry: bestEntry,
+        reply: pickEntryReply(bestEntry)
+      };
+    }
+
+    function handleAtomInput(rawText) {
+      if (!rawText || !rawText.trim()) return false;
+
+      const match = findBestDialogueMatch(rawText);
+      if (match) {
+        speakAtom(match.reply, match.entry.emotion);
+        return match;
+      } else {
+        triggerNoResponseScreen();
+        return null;
+      }
+    }
+
+    const talkForm = document.getElementById("talk-form");
+    const talkInput = document.getElementById("talk-input");
+    if (talkForm) {
+      talkForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const val = talkInput.value;
+        if (!val.trim()) return;
+        talkInput.value = "";
+        handleAtomInput(val);
+      });
+    }
+
+    /**
+     * =========================================================================
+     * 6. EXPANDED TERMINAL CONSOLE (TERM.SH) WITH HISTORY & 18+ COMMANDS
+     * =========================================================================
+     */
+    const termForm = document.getElementById("term-form");
+    const termInput = document.getElementById("term-input");
+    const termOutput = document.getElementById("term-output");
+
+    const cmdHistory = [];
+    let historyIdx = -1;
+
+    function printTerm(text, isPre = false) {
+      const line = document.createElement(isPre ? "pre" : "div");
+      if (isPre) {
+        line.className = "my-1 whitespace-pre overflow-x-auto";
+      }
+      line.textContent = text;
+      termOutput.appendChild(line);
+      termOutput.scrollTop = termOutput.scrollHeight;
+    }
+
+    function triggerGlitch() {
+      document.body.classList.add("glitching");
+      setTimeout(() => document.body.classList.remove("glitching"), 450);
+    }
+
+    function triggerReboot() {
+      const overlay = document.getElementById("reboot-overlay");
+      const log = document.getElementById("reboot-log");
+      log.innerHTML = "";
+      overlay.classList.remove("hidden");
+      overlay.classList.add("flex");
+
+      const steps = [
+        "SHUTTING DOWN KERNEL...",
+        "CHECKING 1-BIT VRAM... 64KB OK",
+        "MOUNTING USER.SYS... OK",
+        "LOADING BGM.MP3 STREAM... OK",
+        "SYSTEM READY."
+      ];
+
+      steps.forEach((msg, i) => {
+        setTimeout(() => {
+          const d = document.createElement("div");
+          d.textContent = msg;
+          log.appendChild(d);
+        }, i * 260);
+      });
+
+      setTimeout(() => {
+        overlay.classList.add("hidden");
+        overlay.classList.remove("flex");
+        termOutput.innerHTML = "";
+        printTerm("REBOOT COMPLETE. TYPE 'HELP'.");
+      }, steps.length * 270 + 250);
+    }
+
+    function getUptime() {
+      const sec = Math.floor((Date.now() - bootTimestamp) / 1000);
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${m}M ${s}S`;
+    }
+
+    function runCmd(rawInput) {
+      const raw = rawInput.trim();
+      if (!raw) return;
+
+      cmdHistory.push(raw);
+      historyIdx = cmdHistory.length;
+
+      printTerm(`> ${raw.toUpperCase()}`);
+
+      const parts = raw.split(/\s+/);
+      const cmd = parts[0].toLowerCase();
+      const arg = parts.slice(1).join(" ");
+
+      switch (cmd) {
+        case "help":
+        case "?":
+          printTerm("AVAILABLE COMMANDS:");
+          printTerm("  WORDS          : ALL TRIGGER WORDS (1-9)");
+          printTerm("  SENTENCES      : FULL SENTENCES & QUESTIONS");
+          printTerm("  TALK <TEXT>    : SPEAK TO ATOM");
+          printTerm("  FACE <1-9>     : SET CAT EMOTION");
+          printTerm("  ABOUT / WHOAMI : USER INFO");
+          printTerm("  SYS / NEOFETCH : SYSTEM SPECS");
+          printTerm("  LS             : LIST FILES");
+          printTerm("  CAT <FILE>     : READ FILE");
+          printTerm("  LINKS          : SHOW LINKS");
+          printTerm("  OPEN <TARGET>  : DISCORD|TG|SC");
+          printTerm("  BGM / MUTE     : TOGGLE SOUND");
+          printTerm("  VOL <0-100>    : SET VOLUME");
+          printTerm("  INVERT         : 1-BIT THEME");
+          printTerm("  CRT            : SCANLINES");
+          printTerm("  GLITCH         : SCREEN GLITCH");
+          printTerm("  PET / MEOW     : CAT MODULE");
+          printTerm("  COIN / ROLL    : RNG TOOLS");
+          printTerm("  TIME / UPTIME  : SYSTEM CLOCK");
+          printTerm("  ECHO <TEXT>    : PRINT TEXT");
+          printTerm("  REBOOT         : RESTART OS");
+          printTerm("  CLEAR / CLS    : CLEAR SCREEN");
+          break;
+
+        case "words":
+        case "topics":
+        case "dialog":
+          printTerm("=== ATOM TRIGGER WORDS (TALK.EXE) ===");
+          printTerm("[1:IDLE]    HELLO, HI, HEY, YO, ATOM, NAME, ABOUT, STATUS, NODE, OS, LINKS, DISCORD, TG, HAT, EARS");
+          printTerm("[2:HAPPY]   MUSIC, SOUNDCLOUD, SONG, TRACKS, BEATS, FL STUDIO, DAW, SYNTH, PET, PAT, KITTY, PANCAKES, TEA, COFFEE, COOL, AWESOME, THANKS, FRIEND");
+          printTerm("[3:UWU]     UWU, OWO, :3, <3, CUTE, KAWAII, NYA, MEOW, PURR, PSPSPS, LOVE, ILY, HUG, KISS, BOOP, BEANS, PAWS, SILLY, NEKO");
+          printTerm("[4:SAD]     SAD, CRY, LONELY, ALONE, PAIN, HURT, SORRY, BYE, GOODBYE, LEAVE, HATE, BORING, UGLY, STUPID, RAIN, COLD, DARK, MISS");
+          printTerm("[5:SMUG]    SMUG, PRO, SKILL, HACKER, ROOT, SUDO, CODE, LINUX, SECRET, EASTER EGG, PASSWORD, GENIUS, SMART, BOSS, GOAT, EZ");
+          printTerm("[6:AWKWARD] SLEEP, SLEEPING, WAKE UP, LAZY, TIRED, NAP, AWKWARD, SHY, BLUSH, CRUSH, MARRY, WEIRD, SUS, DROP, RELEASE, DEADLINE, WIP");
+          printTerm("[7:ANXIOUS] ANXIOUS, SCARED, PANIC, STRESS, HELP, SOS, ERROR, BUG, CRASH, LIGHTBULB, SUN, SHATTER, FRAGILE, EXAM, WORK, SCHOOL, MONDAY");
+          printTerm("[8:CREEPY]  CREEPY, SCARY, HORROR, ENTITY, VOID, 666, GHOST, DIE, KILL, BLOOD, VIRUS, GLITCH, SIMULATION, MACHINE, REAL, SENTIENT, AWAKE");
+          printTerm("[9:LAUGH]   JOKE, FUNNY, LOL, LMAO, HAHA, XD, MEME, BASED, PRANK, TROLL, CHAOS, BOOM, GAME, RPG, UNDERTALE, SANS, ONESHOT, NIKO");
+          printTerm("* TYPE 'SENTENCES' FOR FULL PHRASES & QUESTIONS!");
+          break;
+
+        case "sentences":
+        case "phrases":
+        case "questions":
+          printTerm("=== ATOM SENTENCES & QUESTIONS (TALK.EXE) ===");
+          printTerm("[1:IDLE]    'WHO ARE YOU?', 'WHAT IS YOUR NAME?', 'TELL ME ABOUT YOURSELF', 'WHAT ARE YOU DOING?', 'WHERE AM I?', 'WHAT IS THIS PLACE?', 'HOW CAN I CONTACT YOU?', 'NICE HAT'");
+          printTerm("[2:HAPPY]   'I LIKE YOUR MUSIC', 'WHAT MUSIC DO YOU MAKE?', 'WHAT DAW DO YOU USE?', 'CAN I PET YOU?', 'DO YOU LIKE PANCAKES?', 'HERE IS A PANCAKE', 'I LIKE YOUR SITE', 'CAN WE BE FRIENDS?'");
+          printTerm("[3:UWU]     'I LOVE YOU', 'YOU ARE SO CUTE', 'CAN I HAVE A HUG?', 'BOOPS YOUR NOSE', 'SAY UWU', 'SAY NYA', 'HERE KITTY KITTY'");
+          printTerm("[4:SAD]     'I AM SAD', 'I FEEL LONELY', 'I HAD A BAD DAY', 'I HAVE TO GO', 'SEE YOU LATER', 'GOOD NIGHT', 'I HATE YOU', 'I AM SORRY', 'DO YOU MISS ME?'");
+          printTerm("[5:SMUG]    'ARE YOU A HACKER?', 'WHO CODED THIS?', 'TELL ME A SECRET', 'WHAT IS THE PASSWORD?', 'WHO IS THE BEST?', 'TOO EASY'");
+          printTerm("[6:AWKWARD] 'ARE YOU SLEEPING?', 'WAKE UP ALREADY', 'WHEN IS THE NEW TRACK?', 'DROP THE TRACK', 'STOP PROCRASTINATING', 'WILL YOU MARRY ME?', 'WHY ARE YOU BLUSHING?'");
+          printTerm("[7:ANXIOUS] 'SOMETHING BROKE', 'THERE IS A BUG', 'THE SYSTEM IS CRASHING', 'DO NOT DROP THE LIGHTBULB', 'IS THE SUN OKAY?', 'I HAVE AN EXAM TOMORROW', 'HELP ME PLEASE'");
+          printTerm("[8:CREEPY]  'ARE YOU REAL?', 'ARE YOU ALIVE?', 'IS THIS A SIMULATION?', 'LOOK BEHIND YOU', 'CAN YOU SEE ME?', 'WHAT IS IN SECRET.TXT?'");
+          printTerm("[9:LAUGH]   'HOW ARE YOU?', 'HOW IS IT GOING?', 'TELL ME A JOKE', 'MAKE ME LAUGH', 'WHAT GAMES DO YOU PLAY?', 'DO YOU KNOW ONESHOT?', 'LET US CAUSE CHAOS'");
+          printTerm("* TIP: YOU CAN TYPE ANY SENTENCE IN TALK.EXE OR RIGHT HERE!");
+          break;
+
+        case "talk":
+        case "say":
+        case "ask":
+          openWindow("win-talk");
+          if (!arg) {
+            printTerm("OPENED TALK.EXE. TYPE 'WORDS' OR 'SENTENCES' FOR TRIGGERS.");
+          } else {
+            const res = handleAtomInput(arg);
+            if (res) {
+              const emo = ATOM_EMOTIONS[res.entry.emotion];
+              printTerm(`ATOM [${emo.name}]: "${res.reply}"`);
+            } else {
+              printTerm("ATOM: ... No response.");
+            }
+          }
+          break;
+
+        case "face":
+        case "emotion": {
+          const n = parseInt(arg, 10);
+          if (isNaN(n) || n < 1 || n > 9) {
+            printTerm("USAGE: FACE <1-9> (OR CLICK AVATAR IN USER.SYS)");
+          } else {
+            currentProfileEmotion = n;
+            renderCatEmotionSVG("profile-cat-pixels", n);
+            renderCatEmotionSVG("talk-cat-pixels", n);
+            const badge = document.getElementById("profile-emo-badge");
+            if (badge) badge.textContent = `${n}/9`;
+            playVoiceBlip(n);
+            printTerm(`EMOTION SET TO [${n}/9]: ${ATOM_EMOTIONS[n].name}`);
+          }
+          break;
+        }
+
+        case "about":
+        case "whoami":
+          printTerm(`ID     : ${CONFIG.profile.id}`);
+          printTerm(`ROLE   : ${CONFIG.profile.role}`);
+          printTerm(`STATUS : ${CONFIG.profile.status}`);
+          printTerm(`NOTE   : ${CONFIG.profile.bio}`);
+          break;
+
+        case "sys":
+        case "neofetch":
+          printTerm(
+            "  /\\_/\\    OS: ATOM_OS 1-BIT\n" +
+            " [=====]   MEM: 64KB SRAM\n" +
+            " | | | |   DISPLAY: MONO CRT\n" +
+            " == ^ ==   UPTIME: " + getUptime(),
+            true
+          );
+          break;
+
+        case "ls":
+        case "dir":
+          printTerm("FILES: " + Object.keys(CONFIG.files).join("  "));
+          printTerm("USE: CAT <FILENAME>");
+          break;
+
+        case "cat":
+        case "read": {
+          const target = arg.toLowerCase();
+          if (!target) {
+            printTerm("USAGE: CAT README.TXT");
+          } else if (CONFIG.files[target]) {
+            CONFIG.files[target].forEach(l => printTerm(l));
+          } else {
+            printTerm(`ERR: FILE '${target.toUpperCase()}' NOT FOUND.`);
+          }
+          break;
+        }
+
+        case "links":
+          openWindow("win-links");
+          printTerm("1. DISCORD    (OPEN DISCORD)");
+          printTerm("2. TELEGRAM   (OPEN TG)");
+          printTerm("3. SOUNDCLOUD (OPEN SC)");
+          break;
+
+        case "open": {
+          const t = arg.toLowerCase();
+          if (t === "discord" || t === "dc") {
+            window.open(CONFIG.links.discord, "_blank");
+            printTerm("OPENING DISCORD...");
+          } else if (t === "tg" || t === "telegram") {
+            window.open(CONFIG.links.telegram, "_blank");
+            printTerm("OPENING TELEGRAM...");
+          } else if (t === "sc" || t === "soundcloud") {
+            window.open(CONFIG.links.soundcloud, "_blank");
+            printTerm("OPENING SOUNDCLOUD...");
+          } else {
+            printTerm("USAGE: OPEN DISCORD | TG | SC");
+          }
+          break;
+        }
+
+        case "bgm":
+        case "mute":
+        case "sound":
+        case "play":
+        case "stop":
+          toggleBgm();
+          printTerm(audio.paused ? "BGM: MUTED" : "BGM: PLAYING");
+          break;
+
+        case "vol":
+        case "volume": {
+          if (!arg) {
+            printTerm(`CURRENT VOLUME: ${currentVolPct}%`);
+            printTerm("USAGE: VOL <0-100>");
+          } else {
+            const num = parseInt(arg, 10);
+            if (isNaN(num) || num < 0 || num > 100) {
+              printTerm("ERR: VOLUME MUST BE 0..100");
+            } else {
+              setBgmVolume(num, true);
+              printTerm(`VOLUME SET TO: ${currentVolPct}%`);
+            }
+          }
+          break;
+        }
+
+        case "invert":
+        case "theme":
+          document.body.classList.toggle("inverted");
+          printTerm("1-BIT POLARITY INVERTED.");
+          break;
+
+        case "crt":
+        case "scanlines": {
+          const crt = document.getElementById("crt-overlay");
+          crt.classList.toggle("hidden");
+          printTerm(crt.classList.contains("hidden") ? "CRT: OFF" : "CRT: ON");
+          break;
+        }
+
+        case "glitch":
+          triggerGlitch();
+          printTerm("SIGNAL ANOMALY DETECTED.");
+          break;
+
+        case "pet":
+        case "meow":
+        case "cat":
+          printTerm(
+            "  /\\_/\\  \n" +
+            " ( ^w^ )  < PURR_OK // +1 MORALE >",
+            true
+          );
+          break;
+
+        case "coin":
+        case "flip":
+          printTerm("COIN: " + (Math.random() < 0.5 ? "[ HEADS ]" : "[ TAILS ]"));
+          break;
+
+        case "roll":
+        case "dice": {
+          const r = Math.floor(Math.random() * 100) + 1;
+          printTerm(`ROLLED (1-100): [ ${r} ]`);
+          break;
+        }
+
+        case "time":
+        case "date":
+        case "uptime":
+          printTerm("TIME  : " + new Date().toTimeString().split(" ")[0]);
+          printTerm("UPTIME: " + getUptime());
+          break;
+
+        case "echo":
+          printTerm(arg ? arg.toUpperCase() : "...");
+          break;
+
+        case "sudo":
+          printTerm("ACCESS GRANTED. YOU ARE ALREADY ROOT.");
+          break;
+
+        case "reboot":
+        case "restart":
+          triggerReboot();
+          break;
+
+        case "clear":
+        case "cls":
+          termOutput.innerHTML = "";
+          break;
+
+        default: {
+          // If the user types a question/sentence/word directly in TERM.SH (like "who are you"),
+          // check if Atom knows how to reply to it!
+          const match = findBestDialogueMatch(raw);
+          if (match) {
+            speakAtom(match.reply, match.entry.emotion);
+            const emo = ATOM_EMOTIONS[match.entry.emotion];
+            printTerm(`ATOM [${emo.name}]: "${match.reply}"`);
+          } else {
+            printTerm(`ERR: UNKNOWN CMD '${cmd.toUpperCase()}'. TYPE 'HELP', 'WORDS' OR 'SENTENCES'.`);
+          }
+          break;
+        }
+      }
+    }
+
+    termForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const val = termInput.value;
+      termInput.value = "";
+      runCmd(val);
+    });
+
+    // Command History Navigation (Up / Down Arrows)
+    termInput.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (historyIdx > 0) {
+          historyIdx--;
+          termInput.value = cmdHistory[historyIdx];
+        }
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (historyIdx < cmdHistory.length - 1) {
+          historyIdx++;
+          termInput.value = cmdHistory[historyIdx];
+        } else {
+          historyIdx = cmdHistory.length;
+          termInput.value = "";
+        }
+      }
+    });
+
+    /**
+     * =========================================================================
+     * 7. CLOCK & 1-BIT POLARITY SWITCH
+     * =========================================================================
+     */
+    function updateClock() {
+      const now = new Date();
+      document.getElementById("sys-clock").textContent = now.toTimeString().split(" ")[0];
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    document.getElementById("invert-btn").addEventListener("click", () => {
+      document.body.classList.toggle("inverted");
+    });
+
+    // Boot Initialization
+    initContent();
+    renderCatEmotionSVG("profile-cat-pixels", 1);
+    renderCatEmotionSVG("talk-cat-pixels", 1);
+    speakAtom("...Oh? Someone connected to my node. Say something! (Type WORDS in TERM.SH for hints).", 1);
+    renderExtrasList();
+    renderExtraViewport();
+    attemptAutoplay();
+
+    /**
+     * =========================================================================
+     * 8. LIVE BACKGROUND (SEMI-TRANSPARENT STRIPES & PIXEL PARTICLES)
+     * =========================================================================
+     */
+    (function initLiveBackground() {
+      const canvas = document.getElementById("bg-particles-canvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+
+      let width = 0;
+      let height = 0;
+
+      function resizeCanvas() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+
+      // Semi-transparent drifting horizontal/vertical bands
+      const bands = Array.from({ length: 7 }, () => ({
+        y: Math.random() * height,
+        thickness: Math.floor(Math.random() * 18) + 4,
+        speed: (Math.random() * 0.35 + 0.1) * (Math.random() < 0.5 ? 1 : -1),
+        alpha: Math.random() * 0.045 + 0.015
+      }));
+
+      // Various pixel particles: 'dot', 'plus', 'box', 'streak'
+      const types = ["dot", "plus", "box", "streak"];
+      const particles = Array.from({ length: 55 }, () => createParticle(true));
+
+      function createParticle(randomY = false) {
+        const type = types[Math.floor(Math.random() * types.length)];
+        return {
+          x: Math.random() * width,
+          y: randomY ? Math.random() * height : height + 12,
+          vx: (Math.random() - 0.5) * 0.25,
+          vy: -(Math.random() * 0.45 + 0.12),
+          size: Math.floor(Math.random() * 2 + 1) * 2,
+          alpha: Math.random() * 0.28 + 0.06,
+          pulseSpeed: Math.random() * 0.03 + 0.01,
+          phase: Math.random() * Math.PI * 2,
+          type
+        };
+      }
+
+      function renderBackground() {
+        ctx.clearRect(0, 0, width, height);
+
+        const isInverted = document.body.classList.contains("inverted");
+        const rgb = isInverted ? "0, 0, 0" : "255, 255, 255";
+
+        // 1. Draw drifting semi-transparent horizontal stripes/bands
+        for (let i = 0; i < bands.length; i++) {
+          const b = bands[i];
+          b.y += b.speed;
+          if (b.y > height + b.thickness) b.y = -b.thickness;
+          if (b.y < -b.thickness) b.y = height + b.thickness;
+
+          ctx.fillStyle = `rgba(${rgb}, ${b.alpha})`;
+          ctx.fillRect(0, Math.round(b.y), width, b.thickness);
+        }
+
+        // 2. Draw floating pixel particles
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.phase += p.pulseSpeed;
+
+          if (p.y < -20) {
+            Object.assign(p, createParticle(false));
+          }
+          if (p.x < -10) p.x = width + 10;
+          if (p.x > width + 10) p.x = -10;
+
+          const currentAlpha = Math.max(0.03, p.alpha + Math.sin(p.phase) * 0.08);
+          ctx.fillStyle = `rgba(${rgb}, ${currentAlpha})`;
+
+          const px = Math.round(p.x / 2) * 2;
+          const py = Math.round(p.y / 2) * 2;
+
+          if (p.type === "dot") {
+            ctx.fillRect(px, py, p.size, p.size);
+          } else if (p.type === "plus") {
+            const s = 2;
+            ctx.fillRect(px, py - s, s, s * 3);
+            ctx.fillRect(px - s, py, s * 3, s);
+          } else if (p.type === "box") {
+            const s = p.size + 4;
+            ctx.fillRect(px, py, s, 1);
+            ctx.fillRect(px, py + s - 1, s, 1);
+            ctx.fillRect(px, py, 1, s);
+            ctx.fillRect(px + s - 1, py, 1, s);
+          } else if (p.type === "streak") {
+            ctx.fillRect(px, py, 1, p.size * 4);
+          }
+        }
+
+        requestAnimationFrame(renderBackground);
+      }
+
+      requestAnimationFrame(renderBackground);
+    })();
+  </script>
+</body>
+</html>
